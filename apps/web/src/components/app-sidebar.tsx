@@ -5,11 +5,9 @@ import { NavProjects } from "@/components/nav-projects";
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarHeader,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { VersionDisplay } from "@/components/version-display";
 import { WorkspaceSwitcher } from "@/components/workspace-switcher";
 import { shortcuts } from "@/constants/shortcuts";
 import { useRegisterShortcuts } from "@/hooks/use-keyboard-shortcuts";
@@ -36,9 +34,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavMain />
         <NavProjects />
       </SidebarContent>
-      <SidebarFooter>
-        <VersionDisplay />
-      </SidebarFooter>
     </Sidebar>
   );
 }

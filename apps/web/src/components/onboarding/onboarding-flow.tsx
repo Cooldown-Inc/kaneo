@@ -8,7 +8,6 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod/v4";
 
-import { Logo } from "@/components/common/logo";
 import PageTitle from "@/components/page-title";
 import useAuth from "@/components/providers/auth-provider/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -102,8 +101,6 @@ export function OnboardingFlow() {
       transition={{ duration: 0.3 }}
       className="w-full max-w-sm mx-auto"
     >
-      <Logo className="mx-auto mb-6 w-full flex items-end justify-center" />
-
       <div className="bg-white/50 dark:bg-zinc-900/50 backdrop-blur-xl rounded-xl border border-zinc-200/50 dark:border-zinc-800/50 p-6 shadow-xl shadow-zinc-200/20 dark:shadow-zinc-950/20">
         <div className="text-center mb-6">
           <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-100 mb-2">
@@ -176,8 +173,6 @@ export function OnboardingFlow() {
       transition={{ duration: 0.3 }}
       className="w-full max-w-sm mx-auto"
     >
-      <Logo className="mx-auto mb-6 w-full flex items-end justify-center" />
-
       <div className="bg-white/50 dark:bg-zinc-900/50 backdrop-blur-xl rounded-xl border border-zinc-200/50 dark:border-zinc-800/50 p-6 shadow-xl shadow-zinc-200/20 dark:shadow-zinc-950/20">
         <div className="text-center space-y-4">
           <div className="w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mx-auto">
