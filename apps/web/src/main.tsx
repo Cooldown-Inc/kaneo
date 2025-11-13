@@ -10,27 +10,6 @@ import { ThemeProvider } from "./components/providers/theme-provider";
 import { KeyboardShortcutsProvider } from "./hooks/use-keyboard-shortcuts";
 import { routeTree } from "./routeTree.gen";
 
-console.log(`
-                     ////////  
-              /////  ////////  
-            //////// ////////  
-  //////// ///////// ///////   
-  //////// ///////// //////    
-  //////// ///////// ////      
-  //////// ///////// ///       
-  //////// ///////// /////     
-  //////// ///////// //////    
-  //////// ///////// ////////  
-  //////// ///////// ////////  
-  //////// ///////// ////////  
-  //////// ////////            
-  ////////  /////              
-  ///////                      
-                   
-  
-  All you need. Nothing you don't.
-`);
-
 const router = createRouter({
   routeTree,
   defaultPreload: "intent",

@@ -146,6 +146,52 @@ api.use("*", async (c, next) => {
   return next();
 });
 
+// Global error handler for API routes
+api.onError((err, c) => {
+  const path = c.req.path;
+  const method = c.req.method;
+  
+  console.error(`[${method}] ${path} - Error:`, err);
+  
+  if (err instanceof HTTPException) {
+    return c.json({ error: err.message }, err.status);
+  }
+  
+  // Log full error details in development
+  if (process.env.NODE_ENV !== "production") {
+    console.error("Error stack:", err.stack);
+    console.error("Error details:", err);
+  }
+  
+  return c.json(
+    { error: err.message || "Internal server error" },
+    500,
+  );
+});
+
+// Global error handler for main app (non-API routes)
+app.onError((err, c) => {
+  const path = c.req.path;
+  const method = c.req.method;
+  
+  console.error(`[${method}] ${path} - Error:`, err);
+  
+  if (err instanceof HTTPException) {
+    return c.json({ error: err.message }, err.status);
+  }
+  
+  // Log full error details in development
+  if (process.env.NODE_ENV !== "production") {
+    console.error("Error stack:", err.stack);
+    console.error("Error details:", err);
+  }
+  
+  return c.json(
+    { error: err.message || "Internal server error" },
+    500,
+  );
+});
+
 const modsRoute = api.route("/mods", mods);
 const projectRoute = api.route("/project", project);
 const taskRoute = api.route("/task", task);
