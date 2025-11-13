@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { AppSidebar } from "@/components/app-sidebar";
 import { DemoAlert } from "@/components/demo-alert";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { MODS_ROW_HEIGHT } from "@/constants/mods";
 import { isDemoMode } from "@/constants/urls";
 import { useUserPreferencesEffects } from "@/hooks/use-user-preferences-effects";
 import { cn } from "@/lib/cn";
@@ -66,6 +67,9 @@ function Layout({ children, className }: LayoutProps) {
             "flex-1 flex flex-col overflow-auto bg-card border border-border rounded-md m-2",
             className,
           )}
+          style={{
+            paddingTop: `${MODS_ROW_HEIGHT}px`,
+          } as React.CSSProperties}
         >
           {isDemoMode && <DemoAlert />}
           {children}

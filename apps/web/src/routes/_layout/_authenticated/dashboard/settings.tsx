@@ -8,6 +8,7 @@ import { ChevronLeft } from "lucide-react";
 import PageTitle from "@/components/page-title";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { MODS_ROW_HEIGHT } from "@/constants/mods";
 import useGetProjects from "@/hooks/queries/project/use-get-projects";
 import useActiveWorkspace from "@/hooks/queries/workspace/use-active-workspace";
 
@@ -44,7 +45,12 @@ function SettingsLayout() {
   return (
     <>
       <PageTitle title="Settings" />
-      <div className="flex flex-col gap-4 p-4 bg-sidebar w-full h-full">
+      <div
+        className="flex flex-col gap-4 p-4 bg-sidebar w-full h-full"
+        style={{
+          paddingTop: `${MODS_ROW_HEIGHT + 16}px`,
+        }}
+      >
         <div className="flex flex-col gap-4 bg-card h-full border border-border rounded-md p-4 relative overflow-hidden">
           <div>
             <Button

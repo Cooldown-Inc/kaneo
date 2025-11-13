@@ -1,6 +1,7 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
 import { Toaster } from "sonner";
+import AvailableModsRow from "@/components/mods/available-mods-row";
 import { useUserPreferencesStore } from "@/store/user-preferences";
 import type { User } from "@/types/user";
 
@@ -16,6 +17,7 @@ function RootComponent() {
 
   return (
     <>
+      <AvailableModsRow />
       <div className="flex w-full h-svh overflow-x-hidden overflow-y-hidden flex-row scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-zinc-900 bg-sidebar">
         <Outlet />
       </div>

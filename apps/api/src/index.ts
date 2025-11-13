@@ -11,6 +11,7 @@ import db from "./database";
 import githubIntegration from "./github-integration";
 import label from "./label";
 
+import mods from "./mods";
 import notification from "./notification";
 import project from "./project";
 import { getPublicProject } from "./project/controllers/get-public-project";
@@ -145,6 +146,7 @@ api.use("*", async (c, next) => {
   return next();
 });
 
+const modsRoute = api.route("/mods", mods);
 const projectRoute = api.route("/project", project);
 const taskRoute = api.route("/task", task);
 const activityRoute = api.route("/activity", activity);
@@ -184,6 +186,7 @@ serve(
 );
 
 export type AppType =
+  | typeof modsRoute
   | typeof projectRoute
   | typeof taskRoute
   | typeof activityRoute
