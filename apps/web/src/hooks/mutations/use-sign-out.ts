@@ -10,7 +10,7 @@ function useSignOut() {
       const result = await authClient.signOut({
         fetchOptions: {
           onSuccess: () => {
-            navigate({ to: "/auth/sign-in" });
+            navigate({ to: "/auth/sign-up" });
           },
         },
       });

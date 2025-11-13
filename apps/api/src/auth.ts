@@ -36,7 +36,7 @@ const isCrossSubdomain = (() => {
 
 export const auth = betterAuth({
   baseURL: apiUrl,
-  trustedOrigins: [clientUrl],
+  trustedOrigins: [clientUrl, "http://localhost:5173/"],
   secret: process.env.AUTH_SECRET || "",
   basePath: "/api/auth",
   database: drizzleAdapter(db, {

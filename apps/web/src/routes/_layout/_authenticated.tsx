@@ -7,7 +7,7 @@ export const Route = createFileRoute("/_layout/_authenticated")({
     const { data: session } = await authClient.getSession();
     if (!session) {
       throw redirect({
-        to: "/auth/sign-in",
+        to: "/auth/sign-up",
         search: {
           redirect: location.pathname,
         },
