@@ -31,6 +31,49 @@ const corsOrigins = process.env.CORS_ORIGINS
   ? process.env.CORS_ORIGINS.split(",").map((origin) => origin.trim())
   : undefined;
 
+/**
+ * Check if an origin matches a CORS pattern, supporting wildcard subdomains
+ * Examples:
+ * - "https://example.com" matches "https://example.com"
+ * - "https://app.somethingelse.ai" matches "*.somethingelse.ai" or "https://*.somethingelse.ai"
+ * - "https://api.somethingelse.ai" matches "*.somethingelse.ai" or "https://*.somethingelse.ai"
+ */
+function matchesCorsOrigin(origin: string, pattern: string): boolean {
+  // Exact match
+  if (origin === pattern) {
+    return true;
+  }
+
+  // Check for wildcard subdomain pattern (e.g., "*.somethingelse.ai" or "https://*.somethingelse.ai")
+  const wildcardMatch = pattern.match(/^(https?:\/\/)?\*\.(.+)$/);
+  if (wildcardMatch) {
+    const protocol = wildcardMatch[1] || "";
+    const domain = wildcardMatch[2];
+    
+    // Extract protocol and domain from origin
+    const originMatch = origin.match(/^(https?:\/\/)(.+)$/);
+    if (!originMatch) {
+      return false;
+    }
+    
+    const originProtocol = originMatch[1];
+    const originDomain = originMatch[2];
+    
+    // Protocol must match if specified in pattern
+    if (protocol && originProtocol !== protocol) {
+      return false;
+    }
+    
+    // Check if origin domain ends with the pattern domain
+    // e.g., "app.somethingelse.ai" ends with ".somethingelse.ai"
+    if (originDomain === domain || originDomain.endsWith(`.${domain}`)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 app.use(
   "*",
   cors({
@@ -44,7 +87,14 @@ app.use(
         return null;
       }
 
-      return corsOrigins.includes(origin) ? origin : null;
+      // Check for exact match or wildcard pattern match
+      for (const pattern of corsOrigins) {
+        if (matchesCorsOrigin(origin, pattern)) {
+          return origin;
+        }
+      }
+
+      return null;
     },
   }),
 );
