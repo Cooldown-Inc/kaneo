@@ -46,10 +46,18 @@ export async function seedWorkspace({
         });
 
         if (existingUser) {
+          // Always update image for demo users to ensure they use local profile pictures
+          if (member.image && existingUser.image !== member.image) {
+            await db
+              .update(userTable)
+              .set({ image: member.image })
+              .where(eq(userTable.id, existingUser.id));
+            return { ...existingUser, image: member.image };
+          }
           return existingUser;
         }
 
-        // Create new demo user
+        // Create new demo user with profile picture
         const [newUser] = await db
           .insert(userTable)
           .values({
@@ -58,6 +66,7 @@ export async function seedWorkspace({
             email: member.email,
             emailVerified: false,
             isAnonymous: true,
+            image: member.image,
           })
           .returning();
 

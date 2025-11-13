@@ -2,13 +2,41 @@
 // This data is pre-defined and consistent across all workspace creations
 
 export const SEED_MEMBERS = [
-  { name: "Alex Chen", email: "alex.chen@demo.kaneo.com" },
-  { name: "Sarah Johnson", email: "sarah.johnson@demo.kaneo.com" },
-  { name: "Marcus Williams", email: "marcus.williams@demo.kaneo.com" },
-  { name: "Emma Davis", email: "emma.davis@demo.kaneo.com" },
-  { name: "Jordan Martinez", email: "jordan.martinez@demo.kaneo.com" },
-  { name: "Taylor Brown", email: "taylor.brown@demo.kaneo.com" },
-  { name: "Casey Wilson", email: "casey.wilson@demo.kaneo.com" },
+  {
+    name: "Alex Chen",
+    email: "alex.chen@demo.kaneo.com",
+    image: "/profile-pictures/person-1.jpg",
+  },
+  {
+    name: "Sarah Johnson",
+    email: "sarah.johnson@demo.kaneo.com",
+    image: "/profile-pictures/person-2.jpg",
+  },
+  {
+    name: "Marcus Williams",
+    email: "marcus.williams@demo.kaneo.com",
+    image: "/profile-pictures/person-3.jpg",
+  },
+  {
+    name: "Emma Davis",
+    email: "emma.davis@demo.kaneo.com",
+    image: "/profile-pictures/person-4.jpg",
+  },
+  {
+    name: "Jordan Martinez",
+    email: "jordan.martinez@demo.kaneo.com",
+    image: "/profile-pictures/person-5.jpg",
+  },
+  {
+    name: "Taylor Brown",
+    email: "taylor.brown@demo.kaneo.com",
+    image: "/profile-pictures/person-6.jpg",
+  },
+  {
+    name: "Cassie Wilson",
+    email: "casey.wilson@demo.kaneo.com",
+    image: "/profile-pictures/person-7.jpg",
+  },
 ];
 
 // Active projects (feature-based)
