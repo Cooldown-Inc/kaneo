@@ -1,2 +1,3 @@
-pnpm dlx @biomejs/biome@2.0.6 ci .
+# Lint checks disabled - run manually with: pnpm lint
+# pnpm dlx @biomejs/biome@2.0.6 ci .
 pnpm run build

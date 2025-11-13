@@ -13,6 +13,7 @@ import { config } from "dotenv-mono";
 import { eq } from "drizzle-orm";
 import db, { schema } from "./database";
 import { publishEvent } from "./events";
+import { seedWorkspace } from "./seed/seed-workspace";
 import { generateDemoName } from "./utils/generate-demo-name";
 
 config();
@@ -141,6 +142,14 @@ export const auth = betterAuth({
             workspaceId: organization.id,
             workspaceName: organization.name,
             ownerEmail: user.name,
+          });
+
+          // Seed workspace with demo data (non-blocking)
+          seedWorkspace({
+            workspaceId: organization.id,
+            ownerUserId: user.id,
+          }).catch((error) => {
+            console.error("Failed to seed workspace:", error);
           });
         },
       },
