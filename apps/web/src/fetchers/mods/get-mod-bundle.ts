@@ -1,4 +1,4 @@
-import { client } from "@kaneo/libs";
+import { client } from "@/lib/client";
 
 export type GetModBundleResponse = {
   bundleUrl: string | null;

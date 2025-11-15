@@ -68,7 +68,6 @@
 		"zustand": "^5.0.4"
 	},
 	"devDependencies": {
-		"@kaneo/libs": "workspace:*",
 		"@tailwindcss/postcss": "^4.1.8",
 		"@types/node": "^24.1.0",
 		"@types/react": "^19.1.12",

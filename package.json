@@ -6,7 +6,8 @@
     "build": "turbo build",
     "dev": "turbo dev",
     "lint": "turbo lint",
-    "prepare": "husky"
+    "prepare": "husky",
+    "generate:api-types": "pnpm --filter @kaneo/api exec tsx src/scripts/generate-api-types.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "2.0.6",

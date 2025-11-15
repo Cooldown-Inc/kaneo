@@ -1,4 +1,4 @@
-import { client } from "@kaneo/libs";
+import { client } from "@/lib/client";
 
 async function exportTasks(projectId: string) {
   const response = await client.task.export[":projectId"].$get({
