@@ -35,9 +35,24 @@ const isCrossSubdomain = (() => {
   }
 })();
 
+// Generate trusted origins: include clientUrl and localhost:2021
+function getTrustedOrigins(): string[] {
+  return [
+    clientUrl,
+    "http://localhost:5173",
+    "http://localhost:5173/",
+    "http://localhost:2021",
+    "http://localhost:2021/",
+    "http://127.0.0.1:2021",
+    "http://127.0.0.1:2021/",
+    "http://host.docker.internal:2021",
+    "http://host.docker.internal:2021/",
+  ];
+}
+
 export const auth = betterAuth({
   baseURL: apiUrl,
-  trustedOrigins: [clientUrl, "http://localhost:5173/"],
+  trustedOrigins: getTrustedOrigins(),
   secret: process.env.AUTH_SECRET || "",
   basePath: "/api/auth",
   database: drizzleAdapter(db, {

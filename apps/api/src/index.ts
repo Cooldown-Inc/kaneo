@@ -82,12 +82,27 @@ app.use(
   cors({
     credentials: true,
     origin: (origin) => {
-      if (!corsOrigins) {
-        return origin || "*";
-      }
-
       if (!origin) {
         return null;
+      }
+
+      // Always allow localhost, 127.0.0.1, and host.docker.internal with any port
+      try {
+        const url = new URL(origin);
+        if (
+          url.hostname === "localhost" ||
+          url.hostname === "127.0.0.1" ||
+          url.hostname === "::1" ||
+          url.hostname === "host.docker.internal"
+        ) {
+          return origin;
+        }
+      } catch {
+        // Invalid URL, continue to other checks
+      }
+
+      if (!corsOrigins) {
+        return origin || "*";
       }
 
       // Check for exact match or wildcard pattern match
@@ -102,6 +117,38 @@ app.use(
   }),
 );
 
+// Request logging middleware for main app
+app.use("*", async (c, next) => {
+  const startTime = Date.now();
+  const method = c.req.method;
+  const path = c.req.path;
+  const url = c.req.url;
+  const userAgent = c.req.header("user-agent") || "unknown";
+  const origin = c.req.header("origin") || "unknown";
+  
+  console.log(`[${method}] ${path}`, {
+    method,
+    path,
+    url,
+    origin,
+    userAgent,
+    timestamp: new Date().toISOString(),
+  });
+
+  await next();
+
+  const duration = Date.now() - startTime;
+  const status = c.res.status;
+  
+  console.log(`[${method}] ${path} ${status}`, {
+    method,
+    path,
+    status,
+    statusText: c.res.statusText,
+    duration: `${duration}ms`,
+  });
+});
+
 // Separate Hono instance for API routes (will be mounted at /api)
 // This allows us to define routes without the /api prefix here,
 // while the client in hono.ts knows to connect to /api
@@ -112,6 +159,38 @@ const api = new Hono<{
     userId: string;
   };
 }>();
+
+// Request logging middleware
+api.use("*", async (c, next) => {
+  const startTime = Date.now();
+  const method = c.req.method;
+  const path = c.req.path;
+  const url = c.req.url;
+  const userAgent = c.req.header("user-agent") || "unknown";
+  const origin = c.req.header("origin") || "unknown";
+  
+  console.log(`[${method}] ${path}`, {
+    method,
+    path,
+    url,
+    origin,
+    userAgent,
+    timestamp: new Date().toISOString(),
+  });
+
+  await next();
+
+  const duration = Date.now() - startTime;
+  const status = c.res.status;
+  
+  console.log(`[${method}] ${path} ${status}`, {
+    method,
+    path,
+    status,
+    statusText: c.res.statusText,
+    duration: `${duration}ms`,
+  });
+});
 
 api.get(
   "/health",
