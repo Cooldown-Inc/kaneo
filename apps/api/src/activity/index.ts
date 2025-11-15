@@ -1,5 +1,6 @@
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
+import { describeRoute, resolver } from "hono-openapi";
 import { z } from "zod";
 import { subscribeToEvent } from "../events";
 import toNormalCase from "../utils/to-normal-case";
@@ -9,20 +10,56 @@ import deleteComment from "./controllers/delete-comment";
 import getActivitiesFromTaskId from "./controllers/get-activities";
 import updateComment from "./controllers/update-comment";
 
+const activitySchema = z.object({
+  id: z.string(),
+  taskId: z.string(),
+  type: z.string(),
+  userId: z.string(),
+  content: z.string(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
 const activity = new Hono()
   .get(
     "/:taskId",
+    describeRoute({
+      summary: "Get activities by task",
+      description: "Get all activities for a task",
+      responses: {
+        200: {
+          description: "List of activities",
+          content: {
+            "application/json": {
+              schema: resolver(z.array(activitySchema)),
+            },
+          },
+        },
+      },
+    }),
     zValidator("param", z.object({ taskId: z.string() })),
     async (c) => {
       const { taskId } = c.req.valid("param");
-
       const activities = await getActivitiesFromTaskId(taskId);
-
       return c.json(activities);
     },
   )
   .post(
     "/create",
+    describeRoute({
+      summary: "Create activity",
+      description: "Create a new activity",
+      responses: {
+        200: {
+          description: "Created activity",
+          content: {
+            "application/json": {
+              schema: resolver(activitySchema),
+            },
+          },
+        },
+      },
+    }),
     zValidator(
       "json",
       z.object({
@@ -34,14 +71,26 @@ const activity = new Hono()
     ),
     async (c) => {
       const { taskId, type, userId, content } = c.req.valid("json");
-
       const activity = await createActivity(taskId, type, userId, content);
-
       return c.json(activity);
     },
   )
   .post(
     "/comment",
+    describeRoute({
+      summary: "Create comment",
+      description: "Create a new comment on a task",
+      responses: {
+        200: {
+          description: "Created comment",
+          content: {
+            "application/json": {
+              schema: resolver(activitySchema),
+            },
+          },
+        },
+      },
+    }),
     zValidator(
       "json",
       z.object({
@@ -52,14 +101,26 @@ const activity = new Hono()
     ),
     async (c) => {
       const { taskId, content, userId } = c.req.valid("json");
-
       const activity = await createComment(taskId, userId, content);
-
       return c.json(activity);
     },
   )
   .put(
     "/comment",
+    describeRoute({
+      summary: "Update comment",
+      description: "Update a comment by ID",
+      responses: {
+        200: {
+          description: "Updated comment",
+          content: {
+            "application/json": {
+              schema: resolver(activitySchema),
+            },
+          },
+        },
+      },
+    }),
     zValidator(
       "json",
       z.object({
@@ -70,14 +131,26 @@ const activity = new Hono()
     ),
     async (c) => {
       const { id, content, userId } = c.req.valid("json");
-
       const activity = await updateComment(userId, id, content);
-
       return c.json(activity);
     },
   )
   .delete(
     "/comment",
+    describeRoute({
+      summary: "Delete comment",
+      description: "Delete a comment by ID",
+      responses: {
+        200: {
+          description: "Success message",
+          content: {
+            "application/json": {
+              schema: resolver(z.object({ message: z.string() })),
+            },
+          },
+        },
+      },
+    }),
     zValidator(
       "json",
       z.object({
@@ -87,9 +160,7 @@ const activity = new Hono()
     ),
     async (c) => {
       const { id, userId } = c.req.valid("json");
-
       await deleteComment(userId, id);
-
       return c.json({ message: "Comment deleted" });
     },
   );

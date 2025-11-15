@@ -4,6 +4,8 @@ import { migrate } from "drizzle-orm/postgres-js/migrator";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { HTTPException } from "hono/http-exception";
+import { describeRoute, openAPIRouteHandler, resolver } from "hono-openapi";
+import { z } from "zod";
 import activity from "./activity";
 import { auth } from "./auth";
 import config from "./config";
@@ -53,7 +55,7 @@ function matchesCorsOrigin(origin: string, pattern: string): boolean {
     
     // Extract protocol and domain from origin
     const originMatch = origin.match(/^(https?:\/\/)(.+)$/);
-    if (!originMatch) {
+    if (!originMatch || !originMatch[1] || !originMatch[2]) {
       return false;
     }
     
@@ -111,9 +113,49 @@ const api = new Hono<{
   };
 }>();
 
-api.get("/health", (c) => {
-  return c.json({ status: "ok" });
-});
+api.get(
+  "/health",
+  describeRoute({
+    summary: "Health check",
+    description: "Check if the API is running",
+    responses: {
+      200: {
+        description: "OK",
+        content: {
+          "application/json": {
+            schema: resolver(z.object({ status: z.string() })),
+          },
+        },
+      },
+    },
+  }),
+  (c) => {
+    return c.json({ status: "ok" });
+  },
+);
+
+// OpenAPI spec endpoint - automatically generates spec from routes with describeRoute
+api.get(
+  "/openapi",
+  openAPIRouteHandler(api, {
+    documentation: {
+      openapi: "3.1.0",
+      info: {
+        title: "Kaneo API",
+        version: "1.0.0",
+        description: "API specification for Kaneo",
+      },
+      servers: [
+        {
+          url: process.env.KANEO_API_URL
+            ? `${process.env.KANEO_API_URL}/api`
+            : "http://localhost:1337/api",
+          description: "API Server",
+        },
+      ],
+    },
+  }),
+);
 
 const configRoute = api.route("/config", config);
 
@@ -122,12 +164,51 @@ const githubIntegrationRoute = api.route(
   githubIntegration,
 );
 
-const publicProjectRoute = api.get("/public-project/:id", async (c) => {
-  const { id } = c.req.param();
-  const project = await getPublicProject(id);
-
-  return c.json(project);
-});
+const publicProjectRoute = api.get(
+  "/public-project/:id",
+  describeRoute({
+    summary: "Get public project",
+    description: "Get a public project by ID (no authentication required)",
+    responses: {
+      200: {
+        description: "Public project details",
+        content: {
+          "application/json": {
+            schema: resolver(
+              z.object({
+                id: z.string(),
+                name: z.string(),
+                icon: z.string(),
+                slug: z.string(),
+                description: z.string().nullable(),
+                isPublic: z.boolean(),
+                columns: z.array(
+                  z.object({
+                    id: z.string(),
+                    name: z.string(),
+                    position: z.number(),
+                    tasks: z.array(z.any()),
+                  }),
+                ),
+              }),
+            ),
+          },
+        },
+      },
+      404: {
+        description: "Project not found",
+      },
+      403: {
+        description: "Project is not public",
+      },
+    },
+  }),
+  async (c) => {
+    const { id } = c.req.param();
+    const project = await getPublicProject(id);
+    return c.json(project);
+  },
+);
 
 api.on(["POST", "GET", "PUT", "DELETE"], "/auth/*", (c) =>
   auth.handler(c.req.raw),

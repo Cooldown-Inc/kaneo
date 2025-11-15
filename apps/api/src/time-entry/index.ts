@@ -1,10 +1,23 @@
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
+import { describeRoute, resolver } from "hono-openapi";
 import { z } from "zod";
 import createTimeEntry from "./controllers/create-time-entry";
 import getTimeEntriesByTaskId from "./controllers/get-time-entries";
 import getTimeEntry from "./controllers/get-time-entry";
 import updateTimeEntry from "./controllers/update-time-entry";
+
+const timeEntrySchema = z.object({
+  id: z.string(),
+  taskId: z.string(),
+  userId: z.string(),
+  description: z.string().nullable(),
+  startTime: z.string(),
+  endTime: z.string().nullable(),
+  duration: z.number().nullable(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
 
 const timeEntry = new Hono<{
   Variables: {
@@ -13,6 +26,20 @@ const timeEntry = new Hono<{
 }>()
   .get(
     "/task/:taskId",
+    describeRoute({
+      summary: "Get time entries by task",
+      description: "Get all time entries for a task",
+      responses: {
+        200: {
+          description: "List of time entries",
+          content: {
+            "application/json": {
+              schema: resolver(z.array(timeEntrySchema)),
+            },
+          },
+        },
+      },
+    }),
     zValidator("param", z.object({ taskId: z.string() })),
     async (c) => {
       const { taskId } = c.req.valid("param");
@@ -20,13 +47,45 @@ const timeEntry = new Hono<{
       return c.json(timeEntries);
     },
   )
-  .get("/:id", zValidator("param", z.object({ id: z.string() })), async (c) => {
-    const { id } = c.req.valid("param");
-    const timeEntry = await getTimeEntry(id);
-    return c.json(timeEntry);
-  })
+  .get(
+    "/:id",
+    describeRoute({
+      summary: "Get time entry",
+      description: "Get a time entry by ID",
+      responses: {
+        200: {
+          description: "Time entry details",
+          content: {
+            "application/json": {
+              schema: resolver(timeEntrySchema),
+            },
+          },
+        },
+      },
+    }),
+    zValidator("param", z.object({ id: z.string() })),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const timeEntry = await getTimeEntry(id);
+      return c.json(timeEntry);
+    },
+  )
   .post(
     "/",
+    describeRoute({
+      summary: "Create time entry",
+      description: "Create a new time entry",
+      responses: {
+        200: {
+          description: "Created time entry",
+          content: {
+            "application/json": {
+              schema: resolver(timeEntrySchema),
+            },
+          },
+        },
+      },
+    }),
     zValidator(
       "json",
       z.object({
@@ -51,6 +110,20 @@ const timeEntry = new Hono<{
   )
   .put(
     "/:id",
+    describeRoute({
+      summary: "Update time entry",
+      description: "Update a time entry by ID",
+      responses: {
+        200: {
+          description: "Updated time entry",
+          content: {
+            "application/json": {
+              schema: resolver(timeEntrySchema),
+            },
+          },
+        },
+      },
+    }),
     zValidator("param", z.object({ id: z.string() })),
     zValidator(
       "json",

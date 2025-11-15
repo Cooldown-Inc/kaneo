@@ -1,6 +1,7 @@
 import { zValidator } from "@hono/zod-validator";
 import { eq } from "drizzle-orm";
 import { Hono } from "hono";
+import { describeRoute, resolver } from "hono-openapi";
 import { z } from "zod";
 import db from "../database";
 import { taskTable } from "../database/schema";
@@ -11,18 +12,62 @@ import getNotifications from "./controllers/get-notifications";
 import markAllNotificationsAsRead from "./controllers/mark-all-notifications-as-read";
 import markNotificationAsRead from "./controllers/mark-notification-as-read";
 
+const notificationSchema = z.object({
+  id: z.string(),
+  userId: z.string(),
+  title: z.string(),
+  content: z.string().nullable(),
+  type: z.string().nullable(),
+  resourceId: z.string().nullable(),
+  resourceType: z.string().nullable(),
+  isRead: z.boolean(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
 const notification = new Hono<{
   Variables: {
     userId: string;
   };
 }>()
-  .get("/", async (c) => {
-    const userId = c.get("userId");
-    const notifications = await getNotifications(userId);
-    return c.json(notifications);
-  })
+  .get(
+    "/",
+    describeRoute({
+      summary: "Get notifications",
+      description: "Get all notifications for the current user",
+      responses: {
+        200: {
+          description: "List of notifications",
+          content: {
+            "application/json": {
+              schema: resolver(z.array(notificationSchema)),
+            },
+          },
+        },
+      },
+    }),
+    async (c) => {
+      const userId = c.get("userId");
+      const notifications = await getNotifications(userId);
+      return c.json(notifications);
+    },
+  )
   .post(
     "/",
+    describeRoute({
+      summary: "Create notification",
+      description: "Create a new notification",
+      responses: {
+        200: {
+          description: "Created notification",
+          content: {
+            "application/json": {
+              schema: resolver(notificationSchema),
+            },
+          },
+        },
+      },
+    }),
     zValidator(
       "json",
       z.object({
@@ -52,6 +97,20 @@ const notification = new Hono<{
   )
   .patch(
     "/:id/read",
+    describeRoute({
+      summary: "Mark notification as read",
+      description: "Mark a notification as read by ID",
+      responses: {
+        200: {
+          description: "Updated notification",
+          content: {
+            "application/json": {
+              schema: resolver(notificationSchema),
+            },
+          },
+        },
+      },
+    }),
     zValidator("param", z.object({ id: z.string() })),
     async (c) => {
       const { id } = c.req.valid("param");
@@ -59,16 +118,50 @@ const notification = new Hono<{
       return c.json(notification);
     },
   )
-  .patch("/read-all", async (c) => {
-    const userId = c.get("userId");
-    const result = await markAllNotificationsAsRead(userId);
-    return c.json(result);
-  })
-  .delete("/clear-all", async (c) => {
-    const userId = c.get("userId");
-    const result = await clearNotifications(userId);
-    return c.json(result);
-  });
+  .patch(
+    "/read-all",
+    describeRoute({
+      summary: "Mark all notifications as read",
+      description: "Mark all notifications as read for the current user",
+      responses: {
+        200: {
+          description: "Success message",
+          content: {
+            "application/json": {
+              schema: resolver(z.object({ message: z.string() })),
+            },
+          },
+        },
+      },
+    }),
+    async (c) => {
+      const userId = c.get("userId");
+      const result = await markAllNotificationsAsRead(userId);
+      return c.json(result);
+    },
+  )
+  .delete(
+    "/clear-all",
+    describeRoute({
+      summary: "Clear all notifications",
+      description: "Delete all notifications for the current user",
+      responses: {
+        200: {
+          description: "Success message",
+          content: {
+            "application/json": {
+              schema: resolver(z.object({ message: z.string() })),
+            },
+          },
+        },
+      },
+    }),
+    async (c) => {
+      const userId = c.get("userId");
+      const result = await clearNotifications(userId);
+      return c.json(result);
+    },
+  );
 
 subscribeToEvent(
   "task.created",

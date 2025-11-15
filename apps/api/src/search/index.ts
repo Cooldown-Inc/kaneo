@@ -1,7 +1,16 @@
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
+import { describeRoute, resolver } from "hono-openapi";
 import { z } from "zod";
 import globalSearch from "./controllers/global-search";
+
+const searchResultSchema = z.object({
+  id: z.string(),
+  type: z.string(),
+  title: z.string(),
+  description: z.string().nullable().optional(),
+  url: z.string().optional(),
+});
 
 const search = new Hono<{
   Variables: {
@@ -9,6 +18,20 @@ const search = new Hono<{
   };
 }>().get(
   "/",
+  describeRoute({
+    summary: "Global search",
+    description: "Search across tasks, projects, workspaces, comments, and activities",
+    responses: {
+      200: {
+        description: "Search results",
+        content: {
+          "application/json": {
+            schema: resolver(z.array(searchResultSchema)),
+          },
+        },
+      },
+    },
+  }),
   zValidator(
     "query",
     z.object({
