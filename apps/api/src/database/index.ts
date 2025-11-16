@@ -40,11 +40,17 @@ if (process.env.NODE_ENV !== "production") {
   config();
 }
 
+// Determine if we need SSL based on environment
+// Heroku Postgres URLs contain amazonaws.com or heroku domains
+const needsSSL = process.env.DATABASE_URL && 
+  (process.env.DATABASE_URL.includes('amazonaws.com') || 
+   process.env.DATABASE_URL.includes('heroku'));
+
 const pool = new Pool({
   connectionString:
     process.env.DATABASE_URL ||
     "postgresql://kaneo_user:kaneo_password@localhost:5432/kaneo",
-  ssl: process.env.DATABASE_URL
+  ssl: needsSSL
     ? {
         rejectUnauthorized: false, // Required for Heroku Postgres
       }

@@ -23,16 +23,15 @@ if (process.env.NODE_ENV !== "production") {
 
 const apiUrl = process.env.KANEO_API_URL || "http://localhost:1337";
 const clientUrl = process.env.KANEO_CLIENT_URL || "http://localhost:5173";
-const isHttps = apiUrl.startsWith("https://");
-const isCrossSubdomain = (() => {
+const isHttps = apiUrl.startsWith("https://") || clientUrl.startsWith("https://");
+const isCrossDomain = (() => {
   try {
     const apiHost = new URL(apiUrl).hostname;
     const clientHost = new URL(clientUrl).hostname;
-    return (
-      apiHost !== clientHost &&
-      apiHost !== "localhost" &&
-      clientHost !== "localhost"
-    );
+    // Different domains (not just subdomains)
+    const isLocalhost = apiHost === "localhost" || clientHost === "localhost" || 
+                       apiHost === "127.0.0.1" || clientHost === "127.0.0.1";
+    return apiHost !== clientHost && !isLocalhost;
   } catch {
     return false;
   }
@@ -219,12 +218,13 @@ export const auth = betterAuth({
   },
   advanced: {
     defaultCookieAttributes: {
-      // For cross-subdomain auth with HTTPS, use sameSite: "none" with secure: true
+      // For cross-domain auth with HTTPS, use sameSite: "none" with secure: true
       // For same-domain or HTTP deployments, use sameSite: "lax" with secure: false
-      sameSite: isCrossSubdomain && isHttps ? "none" : "lax",
-      secure: isCrossSubdomain && isHttps, // must be true when sameSite is "none"
-      partitioned: isCrossSubdomain && isHttps,
-      domain: process.env.COOKIE_DOMAIN || undefined, // Optional: e.g., ".andrej.com" for explicit cross-subdomain cookies
+      sameSite: isCrossDomain && isHttps ? "none" : "lax",
+      secure: isCrossDomain && isHttps, // must be true when sameSite is "none"
+      // Don't set domain for true cross-domain (different TLDs)
+      // Only set domain for cross-subdomain within same TLD
+      domain: isCrossDomain ? undefined : (process.env.COOKIE_DOMAIN || undefined),
     },
   },
 });
