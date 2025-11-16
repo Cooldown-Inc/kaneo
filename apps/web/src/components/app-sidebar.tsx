@@ -1,7 +1,9 @@
 import type * as React from "react";
 
+import { ModSwitcher } from "@/components/mod-switcher";
 import { NavMain } from "@/components/nav-main";
 import { NavProjects } from "@/components/nav-projects";
+import { Separator } from "@/components/ui/separator";
 import {
   Sidebar,
   SidebarContent,
@@ -9,7 +11,6 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { WorkspaceSwitcher } from "@/components/workspace-switcher";
-import { MODS_ROW_HEIGHT } from "@/constants/mods";
 import { shortcuts } from "@/constants/shortcuts";
 import { useRegisterShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import Search from "./search";
@@ -29,12 +30,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     <Sidebar
       collapsible="offcanvas"
       className="border-none pt-3"
-      style={{
-        "--mods-row-height": `${MODS_ROW_HEIGHT}px`,
-      } as React.CSSProperties}
       {...props}
     >
-      <SidebarHeader className="pt-0">
+      <SidebarHeader className="pt-0 gap-2">
+        <ModSwitcher />
+        <div className="px-2 py-2">
+          <Separator className="w-3/4 mx-auto" />
+        </div>
         <WorkspaceSwitcher />
       </SidebarHeader>
       <SidebarContent className="overflow-hidden">
