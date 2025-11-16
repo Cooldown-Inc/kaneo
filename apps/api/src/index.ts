@@ -379,15 +379,16 @@ app.route("/api", api);
   }
 })();
 
+const port = Number(process.env.PORT) || 1337;
+
 serve(
   {
     fetch: app.fetch,
-    port: 1337,
+    port,
   },
   () => {
-    console.log(
-      `⚡ API is running at ${process.env.KANEO_API_URL || "http://localhost:1337"}`,
-    );
+    const url = process.env.KANEO_API_URL || `http://localhost:${port}`;
+    console.log(`⚡ API is running at ${url}`);
   },
 );
 

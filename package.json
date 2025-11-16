@@ -4,10 +4,12 @@
   "type": "module",
   "scripts": {
     "build": "turbo build",
+    "build:api": "pnpm --filter @kaneo/api build",
     "dev": "turbo dev",
     "lint": "turbo lint",
     "prepare": "husky",
-    "generate:api-types": "pnpm --filter @kaneo/api exec tsx src/scripts/generate-api-types.ts"
+    "generate:api-types": "pnpm --filter @kaneo/api exec tsx src/scripts/generate-api-types.ts",
+    "heroku-postbuild": "pnpm --filter @kaneo/api build"
   },
   "devDependencies": {
     "@biomejs/biome": "2.0.6",
@@ -21,7 +23,8 @@
     "typescript": "5.8.3"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=18.0.0",
+    "pnpm": "10.15.1"
   },
   "packageManager": "pnpm@10.15.1",
   "version": "2.0.3",

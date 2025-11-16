@@ -1,0 +1,26 @@
+{
+  "name": "Kaneo API",
+  "description": "API server for Kaneo project management",
+  "repository": "https://github.com/your-org/kaneo",
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    }
+  ],
+  "formation": {
+    "web": {
+      "quantity": 1
+    }
+  },
+  "env": {
+    "NODE_ENV": {
+      "required": true,
+      "value": "production"
+    },
+    "ENABLE_COREPACK": {
+      "required": false,
+      "value": "1"
+    }
+  }
+}
+

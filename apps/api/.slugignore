@@ -1,0 +1,15 @@
+# Ignore files not needed for Heroku deployment
+node_modules/
+.git/
+.gitignore
+*.md
+.env*
+!dist/
+!drizzle/
+src/
+tsconfig.json
+drizzle.config.ts
+openapi.json
+*.ts
+!dist/**/*.js
+
