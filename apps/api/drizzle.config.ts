@@ -10,14 +10,14 @@ export default defineConfig({
   out: "./drizzle",
   schema: "./src/database/schema.ts",
   dialect: "postgresql",
-  dbCredentials: {
-    url:
-      process.env.DATABASE_URL ||
-      "postgresql://kaneo_user:kaneo_password@localhost:5432/kaneo",
-    ssl: process.env.DATABASE_URL
-      ? {
+  dbCredentials: process.env.DATABASE_URL
+    ? {
+        url: process.env.DATABASE_URL,
+        ssl: {
           rejectUnauthorized: false, // Required for Heroku Postgres
-        }
-      : false,
-  },
+        },
+      }
+    : {
+        url: "postgresql://kaneo_user:kaneo_password@localhost:5432/kaneo",
+      },
 }) satisfies Config;
