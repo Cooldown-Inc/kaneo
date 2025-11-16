@@ -14,33 +14,25 @@
 heroku create your-app-name
 ```
 
-### 1b. Set Buildpacks (Required for pnpm)
+### 1b. Set Buildpack (Required for pnpm)
 
-The pnpm buildpack must be set BEFORE the Node.js buildpack:
-
-```bash
-heroku buildpacks:add https://github.com/unfold/heroku-buildpack-pnpm.git --app your-app-name
-heroku buildpacks:add heroku/nodejs --app your-app-name
-```
-
-Or if you already have the Node.js buildpack, add pnpm first:
+The pnpm buildpack handles everything (Node.js installation, pnpm installation, dependency installation, and build):
 
 ```bash
-heroku buildpacks:add https://github.com/unfold/heroku-buildpack-pnpm.git --app your-app-name --index 1
+heroku buildpacks:set https://github.com/unfold/heroku-buildpack-pnpm.git --app your-app-name
 ```
 
-This ensures pnpm is installed before the Node.js buildpack tries to use it.
+**Important:** Do NOT add the `heroku/nodejs` buildpack separately - the pnpm buildpack already includes Node.js support. Adding both will cause the Node.js buildpack to run twice and fail.
 
 **Note:** Make sure you have a `pnpm-lock.yaml` file at the root of your repository.
 
-**Verify buildpacks are set correctly:**
+**Verify buildpack is set correctly:**
 ```bash
 heroku buildpacks --app your-app-name
 ```
 
-You should see:
+You should see only:
 1. https://github.com/unfold/heroku-buildpack-pnpm.git
-2. heroku/nodejs
 
 ### 2. Add PostgreSQL Add-on
 
