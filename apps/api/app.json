@@ -2,14 +2,14 @@
   "name": "Kaneo API",
   "description": "API server for Kaneo project management",
   "repository": "https://github.com/your-org/kaneo",
-  "buildpacks": [
-    {
-      "url": "jontewks/pnpm"
-    },
-    {
-      "url": "heroku/nodejs"
-    }
-  ],
+        "buildpacks": [
+          {
+            "url": "https://github.com/unfold/heroku-buildpack-pnpm.git"
+          },
+          {
+            "url": "heroku/nodejs"
+          }
+        ],
   "formation": {
     "web": {
       "quantity": 1
