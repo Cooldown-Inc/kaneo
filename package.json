@@ -10,7 +10,7 @@
     "lint": "turbo lint",
     "prepare": "husky",
     "generate:api-types": "pnpm --filter @kaneo/api exec tsx src/scripts/generate-api-types.ts",
-    "heroku-postbuild": "pnpm --filter @kaneo/api build"
+    "heroku-postbuild": "pnpm --filter @kaneo/email build && pnpm --filter @kaneo/api build"
   },
   "devDependencies": {
     "@biomejs/biome": "2.0.6",

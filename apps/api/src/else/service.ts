@@ -1,6 +1,9 @@
 import { config } from "dotenv-mono";
 
-config();
+// Only load .env files in development (Heroku provides env vars directly)
+if (process.env.NODE_ENV !== "production") {
+  config();
+}
 
 const ELSE_API_BASE_URL =
   process.env.ELSE_API_BASE_URL || "http://localhost:8001/vendor-api";

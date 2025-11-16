@@ -1,6 +1,9 @@
 import { config } from "dotenv-mono";
 
-config();
+// Only load .env files in development (Heroku provides env vars directly)
+if (process.env.NODE_ENV !== "production") {
+  config();
+}
 
 function getSettings() {
   return {

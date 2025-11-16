@@ -1,7 +1,10 @@
 import { config } from "dotenv-mono";
 import { App } from "octokit";
 
-config();
+// Only load .env files in development (Heroku provides env vars directly)
+if (process.env.NODE_ENV !== "production") {
+  config();
+}
 
 function createGithubApp(): App | null {
   if (

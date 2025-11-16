@@ -35,7 +35,10 @@ import {
   workspaceUserTable,
 } from "./schema";
 
-config();
+// Only load .env files in development (Heroku provides env vars directly)
+if (process.env.NODE_ENV !== "production") {
+  config();
+}
 
 const pool = new Pool({
   connectionString:

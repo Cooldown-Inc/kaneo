@@ -1,7 +1,10 @@
 import { config } from "dotenv-mono";
 import { type Config, defineConfig } from "drizzle-kit";
 
-config();
+// Only load .env files in development (Heroku provides env vars directly)
+if (process.env.NODE_ENV !== "production") {
+  config();
+}
 
 export default defineConfig({
   out: "./drizzle",

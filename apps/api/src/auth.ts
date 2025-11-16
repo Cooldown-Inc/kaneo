@@ -16,7 +16,10 @@ import { publishEvent } from "./events";
 import { seedWorkspace } from "./seed/seed-workspace";
 import { generateDemoName } from "./utils/generate-demo-name";
 
-config();
+// Only load .env files in development (Heroku provides env vars directly)
+if (process.env.NODE_ENV !== "production") {
+  config();
+}
 
 const apiUrl = process.env.KANEO_API_URL || "http://localhost:1337";
 const clientUrl = process.env.KANEO_CLIENT_URL || "http://localhost:5173";

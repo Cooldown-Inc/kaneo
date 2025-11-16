@@ -94,9 +94,11 @@ Deploy from the repository root. The Procfile uses `pnpm --filter` to target the
 Heroku will:
 1. Detect the `Procfile` at the root
 2. Run `pnpm install` at the root (installs workspace dependencies)
-3. Run `heroku-postbuild` script (builds the API via `pnpm --filter @kaneo/api build`)
+3. Run `heroku-postbuild` script (builds `@kaneo/email` then `@kaneo/api`)
 4. Run the `release` command (runs migrations)
 5. Start the `web` process
+
+**Note:** The API automatically skips loading `.env` files in production since Heroku provides environment variables directly via `process.env`.
 
 **Note**: If deploying from `apps/api` subdirectory, you'll need to:
 1. Copy root `package.json`, `pnpm-workspace.yaml`, `pnpm-lock.yaml` to `apps/api/`
