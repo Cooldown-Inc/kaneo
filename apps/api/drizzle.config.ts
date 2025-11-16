@@ -14,5 +14,10 @@ export default defineConfig({
     url:
       process.env.DATABASE_URL ||
       "postgresql://kaneo_user:kaneo_password@localhost:5432/kaneo",
+    ssl: process.env.DATABASE_URL
+      ? {
+          rejectUnauthorized: false, // Required for Heroku Postgres
+        }
+      : false,
   },
 }) satisfies Config;
