@@ -8,6 +8,7 @@ import { useAuth } from "@/components/providers/auth-provider/hooks/use-auth";
 import AuthProvider from "./components/providers/auth-provider";
 import { ThemeProvider } from "./components/providers/theme-provider";
 import { KeyboardShortcutsProvider } from "./hooks/use-keyboard-shortcuts";
+import "@/lib/tutorials"; // Initialize tutorial system
 import { routeTree } from "./routeTree.gen";
 
 const router = createRouter({

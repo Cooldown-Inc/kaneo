@@ -13,13 +13,23 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { TutorialPopover } from "@/components/ui/tutorial-popover";
 import getModBundle from "@/fetchers/mods/get-mod-bundle";
 import useGetAvailableMods from "@/hooks/queries/mods/use-get-available-mods";
+import { isTutorialCompleted, startTutorial } from "@/lib/tutorials";
 
 export function ModSwitcher() {
   const { data: mods } = useGetAvailableMods();
   const [isOpen, setIsOpen] = React.useState(false);
   const [selectedMod, setSelectedMod] = React.useState<string | null>(null);
+
+  // Auto-start welcome tutorial when component mounts
+  React.useEffect(() => {
+    if (!isTutorialCompleted("welcome")) {
+      startTutorial("welcome");
+      window.dispatchEvent(new CustomEvent("tutorial-state-changed"));
+    }
+  }, []);
 
   const handleModSelect = async (modId: string | null) => {
     if (modId === null) {
@@ -123,16 +133,33 @@ export function ModSwitcher() {
         </Popover>
       </SidebarMenuItem>
     </SidebarMenu>
-    <InfoPopover title="What are Mods?" side="right" align="start">
-      <p className="mb-2">
-        Mods allow you to customize and extend the functionality of your
-        workspace with different themes, layouts, and features.
-      </p>
-      <p>
-        Select <strong>Original Site</strong> for the default experience, or
-        choose from available mods to transform your interface.
-      </p>
-    </InfoPopover>
+    <div className="relative">
+      <InfoPopover title="What are Mods?" side="right" align="start">
+        <p className="mb-2">
+          Mods allow you to customize and extend the functionality of your
+          workspace with different themes, layouts, and features.
+        </p>
+        <p>
+          Select <strong>Original Site</strong> for the default experience, or
+          choose from available mods to transform your interface.
+        </p>
+      </InfoPopover>
+      
+      <TutorialPopover 
+        tutorial="welcome" 
+        step="intro"
+        side="right"
+        align="start"
+        showArrow={true}
+        arrowPosition="top-left"
+        className="-translate-y-2"
+      >
+        <p>
+          Use this dropdown to explore prototypes created with Else. 
+          When you're ready, try building your own.
+        </p>
+      </TutorialPopover>
+    </div>
   </div>
   );
 }
