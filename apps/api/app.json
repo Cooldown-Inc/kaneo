@@ -17,10 +17,6 @@
       "required": true,
       "value": "production"
     },
-    "ENABLE_COREPACK": {
-      "required": false,
-      "value": "1"
-    }
   }
 }
 

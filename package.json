@@ -9,6 +9,7 @@
     "lint": "turbo lint",
     "prepare": "husky",
     "generate:api-types": "pnpm --filter @kaneo/api exec tsx src/scripts/generate-api-types.ts",
+    "heroku-prebuild": "npm install -g pnpm@10.15.1",
     "heroku-postbuild": "pnpm --filter @kaneo/api build"
   },
   "devDependencies": {
@@ -23,8 +24,7 @@
     "typescript": "5.8.3"
   },
   "engines": {
-    "node": ">=18.0.0",
-    "pnpm": "10.15.1"
+    "node": ">=18.0.0"
   },
   "packageManager": "pnpm@10.15.1",
   "version": "2.0.3",

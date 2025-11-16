@@ -22,15 +22,7 @@ heroku addons:create heroku-postgresql:mini
 
 This automatically sets the `DATABASE_URL` environment variable.
 
-### 3. Enable Corepack for pnpm
-
-Heroku needs corepack enabled to use pnpm:
-
-```bash
-heroku config:set ENABLE_COREPACK=1
-```
-
-### 4. Set Environment Variables
+### 3. Set Environment Variables
 
 Set all required environment variables:
 
