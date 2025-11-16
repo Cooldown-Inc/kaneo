@@ -11,7 +11,6 @@ packages/typescript-config/
 
 # Exclude development files and docs
 *.md
-!apps/api/README.md
 CHANGELOG.md
 CONTRIBUTING.md
 CONTRIBUTORS.svg
@@ -33,31 +32,12 @@ turbo.json
 sync-web-repo.sh
 .buildpacks
 
-# Exclude API development files
-apps/api/src/
-apps/api/tsconfig.json
-apps/api/drizzle.config.ts
-apps/api/openapi.json
+# Exclude some API development files (but keep src/ for build)
 apps/api/HEROKU_DEPLOYMENT.md
 apps/api/app.json
 apps/api/Dockerfile
 apps/api/.slugignore
 
-# Keep only compiled API code
-!apps/api/dist/
-!apps/api/drizzle/
-!apps/api/package.json
-!apps/api/Procfile
-
 # Keep email package (needed at runtime)
-!packages/email/dist/
-!packages/email/package.json
-packages/email/src/
 packages/email/tsconfig.json
-
-# Keep root config files needed for pnpm workspace
-!package.json
-!pnpm-lock.yaml
-!pnpm-workspace.yaml
-!Procfile
 
