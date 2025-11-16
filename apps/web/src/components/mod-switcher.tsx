@@ -1,5 +1,6 @@
 import { ChevronDown, Sparkles } from "lucide-react";
 import * as React from "react";
+import { toast } from "sonner";
 
 import { InfoPopover } from "@/components/ui/info-popover";
 import {
@@ -18,10 +19,30 @@ import getModBundle from "@/fetchers/mods/get-mod-bundle";
 import useGetAvailableMods from "@/hooks/queries/mods/use-get-available-mods";
 import { isTutorialCompleted, startTutorial } from "@/lib/tutorials";
 
+// Declare the global Else SDK interface
+declare global {
+  interface Window {
+    Else?: {
+      loadExtension: (bundleUrl: string) => Promise<void>;
+      unloadExtension: () => Promise<void>;
+    };
+  }
+}
+
+const SELECTED_MOD_KEY = "kaneo_selected_mod";
+
 export function ModSwitcher() {
   const { data: mods } = useGetAvailableMods();
   const [isOpen, setIsOpen] = React.useState(false);
-  const [selectedMod, setSelectedMod] = React.useState<string | null>(null);
+  const [selectedMod, setSelectedMod] = React.useState<string | null>(() => {
+    // Initialize from localStorage if available
+    try {
+      return localStorage.getItem(SELECTED_MOD_KEY);
+    } catch {
+      return null;
+    }
+  });
+  const [isLoading, setIsLoading] = React.useState(false);
 
   // Auto-start welcome tutorial when component mounts
   React.useEffect(() => {
@@ -31,21 +52,76 @@ export function ModSwitcher() {
     }
   }, []);
 
+  // Auto-load the previously selected mod on mount
+  React.useEffect(() => {
+    const loadSavedMod = async () => {
+      if (selectedMod && window.Else?.loadExtension) {
+        try {
+          const response = await getModBundle(selectedMod);
+          if (response.bundleUrl) {
+            await window.Else.loadExtension(response.bundleUrl);
+          }
+        } catch (error) {
+          console.error("Failed to auto-load saved mod:", error);
+          // Clear the saved mod if it fails to load
+          localStorage.removeItem(SELECTED_MOD_KEY);
+          setSelectedMod(null);
+        }
+      }
+    };
+
+    loadSavedMod();
+  }, []); // Only run on mount
+
   const handleModSelect = async (modId: string | null) => {
     if (modId === null) {
-      // "Original Site" selected
-      setSelectedMod(null);
-      setIsOpen(false);
+      // "Original Site" selected - unload any active mod
+      setIsLoading(true);
+      try {
+        if (window.Else?.unloadExtension) {
+          await window.Else.unloadExtension();
+          toast.success("Switched to Original Site");
+        }
+        setSelectedMod(null);
+        localStorage.removeItem(SELECTED_MOD_KEY);
+        setIsOpen(false);
+      } catch (error) {
+        console.error("Failed to unload mod:", error);
+        toast.error("Failed to switch to Original Site");
+      } finally {
+        setIsLoading(false);
+      }
       return;
     }
 
+    setIsLoading(true);
     try {
+      // Fetch the bundle URL from the backend
       const response = await getModBundle(modId);
-      console.log("Bundle URL:", response.bundleUrl);
-      setSelectedMod(modId);
-      setIsOpen(false);
+      
+      if (!response.bundleUrl) {
+        throw new Error("No bundle URL returned");
+      }
+
+      // Load the extension using the Else SDK
+      if (window.Else?.loadExtension) {
+        await window.Else.loadExtension(response.bundleUrl);
+        setSelectedMod(modId);
+        localStorage.setItem(SELECTED_MOD_KEY, modId);
+        setIsOpen(false);
+        
+        const modTitle = mods?.find((m) => m.id === modId)?.title;
+        toast.success(`Loaded ${modTitle || "mod"}`);
+      } else {
+        throw new Error("Else SDK not loaded");
+      }
     } catch (error) {
-      console.error("Failed to fetch bundle URL:", error);
+      console.error("Failed to load mod:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to load mod"
+      );
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -66,13 +142,14 @@ export function ModSwitcher() {
               <SidebarMenuButton
                 size="sm"
                 className="h-8 py-0 w-auto w-full group/mod"
+                disabled={isLoading}
               >
                 <div className="flex items-center gap-2 min-w-0 w-full">
                   <div className="bg-purple-600 flex aspect-square size-5 items-center justify-center rounded-sm">
                     <Sparkles className="size-3 text-white" />
                   </div>
                   <span className="truncate text-sm text-foreground/90 font-medium">
-                    {getSelectedModTitle()}
+                    {isLoading ? "Loading..." : getSelectedModTitle()}
                   </span>
                 </div>
                 <ChevronDown
