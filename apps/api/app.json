@@ -4,6 +4,9 @@
   "repository": "https://github.com/your-org/kaneo",
   "buildpacks": [
     {
+      "url": "jontewks/pnpm"
+    },
+    {
       "url": "heroku/nodejs"
     }
   ],

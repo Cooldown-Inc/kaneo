@@ -3,13 +3,13 @@
   "private": false,
   "type": "module",
   "scripts": {
+    "preinstall": "npm install -g pnpm@10.15.1 || true",
     "build": "turbo build",
     "build:api": "pnpm --filter @kaneo/api build",
     "dev": "turbo dev",
     "lint": "turbo lint",
     "prepare": "husky",
     "generate:api-types": "pnpm --filter @kaneo/api exec tsx src/scripts/generate-api-types.ts",
-    "heroku-prebuild": "npm install -g pnpm@10.15.1",
     "heroku-postbuild": "pnpm --filter @kaneo/api build"
   },
   "devDependencies": {
