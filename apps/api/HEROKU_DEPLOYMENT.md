@@ -16,15 +16,29 @@ heroku create your-app-name
 
 ### 1b. Set Buildpacks (Required for pnpm)
 
-The `jontewks/pnpm` buildpack must be set BEFORE the Node.js buildpack:
+The pnpm buildpack must be set BEFORE the Node.js buildpack:
 
 ```bash
-heroku buildpacks:clear
-heroku buildpacks:add jontewks/pnpm
-heroku buildpacks:add heroku/nodejs
+heroku buildpacks:add https://github.com/jontewks/pnpm-buildpack.git --app your-app-name
+heroku buildpacks:add heroku/nodejs --app your-app-name
+```
+
+Or if you already have the Node.js buildpack, add pnpm first:
+
+```bash
+heroku buildpacks:add https://github.com/jontewks/pnpm-buildpack.git --app your-app-name --index 1
 ```
 
 This ensures pnpm is installed before the Node.js buildpack tries to use it.
+
+**Verify buildpacks are set correctly:**
+```bash
+heroku buildpacks --app your-app-name
+```
+
+You should see:
+1. https://github.com/jontewks/pnpm-buildpack.git
+2. heroku/nodejs
 
 ### 2. Add PostgreSQL Add-on
 
