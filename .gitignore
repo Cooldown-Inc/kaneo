@@ -28,6 +28,9 @@ build
 dist
 .source
 
+# Exception: Keep email package dist for Heroku deployment
+!packages/email/dist
+
 # Debug
 npm-debug.log*
 yarn-debug.log*
