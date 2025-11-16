@@ -101,6 +101,7 @@ Heroku will:
 **Notes:**
 - The API automatically skips loading `.env` files in production since Heroku provides environment variables directly via `process.env`.
 - The `@kaneo/email` package's `dist/` folder is committed to git (normally ignored in development) to avoid building it on Heroku, which keeps the build simpler and faster.
+- The `release` command in the Procfile sets `NODE_TLS_REJECT_UNAUTHORIZED=0` to allow SSL connections to Heroku Postgres without certificate verification. The database URL includes `?sslmode=require` to enforce SSL.
 
 **Note**: If deploying from `apps/api` subdirectory, you'll need to:
 1. Copy root `package.json`, `pnpm-workspace.yaml`, `pnpm-lock.yaml` to `apps/api/`

@@ -1,3 +1,3 @@
 web: pnpm --filter @kaneo/api start
-release: pnpm --filter @kaneo/api db:migrate
+release: NODE_TLS_REJECT_UNAUTHORIZED=0 pnpm --filter @kaneo/api db:migrate
 

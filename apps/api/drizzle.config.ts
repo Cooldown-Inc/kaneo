@@ -12,10 +12,7 @@ export default defineConfig({
   dialect: "postgresql",
   dbCredentials: process.env.DATABASE_URL
     ? {
-        url: process.env.DATABASE_URL,
-        ssl: {
-          rejectUnauthorized: false, // Required for Heroku Postgres
-        },
+        url: `${process.env.DATABASE_URL}?sslmode=require`,
       }
     : {
         url: "postgresql://kaneo_user:kaneo_password@localhost:5432/kaneo",
