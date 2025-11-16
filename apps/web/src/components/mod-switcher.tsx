@@ -22,27 +22,67 @@ import { isTutorialCompleted, startTutorial } from "@/lib/tutorials";
 // Declare the global Else SDK interface
 declare global {
   interface Window {
-    Else?: {
-      loadExtension: (bundleUrl: string) => Promise<void>;
-      unloadExtension: () => Promise<void>;
+    else?: {
+      bundleLoaderVersion: string;
+      inElseDevEnvironment: boolean;
+      setCustomBundle: (bundleUrl: string) => void;
+      getCustomBundle: () => string | null;
+      clearCustomBundle: () => void;
+      reloadWithBundle: () => void;
+      setDebug: (debug: boolean) => void;
     };
   }
 }
 
-const SELECTED_MOD_KEY = "kaneo_selected_mod";
-
 export function ModSwitcher() {
   const { data: mods } = useGetAvailableMods();
   const [isOpen, setIsOpen] = React.useState(false);
-  const [selectedMod, setSelectedMod] = React.useState<string | null>(() => {
-    // Initialize from localStorage if available
-    try {
-      return localStorage.getItem(SELECTED_MOD_KEY);
-    } catch {
-      return null;
-    }
-  });
   const [isLoading, setIsLoading] = React.useState(false);
+  const [isSdkReady, setIsSdkReady] = React.useState(false);
+  const [currentBundleUrl, setCurrentBundleUrl] = React.useState<string | null>(null);
+
+  // Check if Else SDK is loaded
+  React.useEffect(() => {
+    // Debug: Log what's on the window object
+    console.log("🔍 Checking for Else SDK...");
+    console.log("window.else:", window.else);
+    
+    const checkSdk = () => {
+      if (window.else?.setCustomBundle && window.else?.reloadWithBundle) {
+        console.log("✅ Else SDK loaded successfully");
+        console.log("SDK Version:", window.else.bundleLoaderVersion);
+        setIsSdkReady(true);
+        return true;
+      }
+      
+      return false;
+    };
+
+    // Check immediately
+    if (checkSdk()) return;
+
+    console.log("⏳ Waiting for Else SDK to load...");
+
+    // Poll for SDK availability
+    const interval = setInterval(() => {
+      if (checkSdk()) {
+        clearInterval(interval);
+      }
+    }, 100);
+
+    // Timeout after 10 seconds
+    const timeout = setTimeout(() => {
+      clearInterval(interval);
+      console.error("❌ Else SDK failed to load within 10 seconds");
+      console.log("Final check - window.else:", window.else);
+      toast.error("Failed to initialize mod system. Please refresh the page.");
+    }, 10000);
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timeout);
+    };
+  }, []);
 
   // Auto-start welcome tutorial when component mounts
   React.useEffect(() => {
@@ -52,48 +92,53 @@ export function ModSwitcher() {
     }
   }, []);
 
-  // Auto-load the previously selected mod on mount
+  // Get the current bundle URL from Else SDK when SDK is ready
   React.useEffect(() => {
-    const loadSavedMod = async () => {
-      if (selectedMod && window.Else?.loadExtension) {
-        try {
-          const response = await getModBundle(selectedMod);
-          if (response.bundleUrl) {
-            await window.Else.loadExtension(response.bundleUrl);
-          }
-        } catch (error) {
-          console.error("Failed to auto-load saved mod:", error);
-          // Clear the saved mod if it fails to load
-          localStorage.removeItem(SELECTED_MOD_KEY);
-          setSelectedMod(null);
-        }
-      }
-    };
+    if (!isSdkReady) return;
 
-    loadSavedMod();
-  }, []); // Only run on mount
+    const bundleUrl = window.else?.getCustomBundle() || null;
+    setCurrentBundleUrl(bundleUrl);
+    console.log("📦 Current bundle from Else SDK:", bundleUrl);
+  }, [isSdkReady]);
 
   const handleModSelect = async (modId: string | null) => {
+    console.log("🎯 handleModSelect called with:", modId);
+    console.log("Current bundle URL:", currentBundleUrl);
+    
+    if (!isSdkReady) {
+      toast.error("Else SDK is still loading. Please wait...");
+      return;
+    }
+
     if (modId === null) {
-      // "Original Site" selected - unload any active mod
-      setIsLoading(true);
+      // "Original Site" selected - only clear if there's actually a bundle loaded
+      if (!currentBundleUrl) {
+        console.log("✅ Already on Original Site, no action needed");
+        return;
+      }
+      
+      console.log("🗑️ Clearing bundle and reloading to Original Site");
       try {
-        if (window.Else?.unloadExtension) {
-          await window.Else.unloadExtension();
-          toast.success("Switched to Original Site");
+        if (window.else) {
+          window.else.clearCustomBundle();
+          // Reload to apply the change
+          window.location.reload();
         }
-        setSelectedMod(null);
-        localStorage.removeItem(SELECTED_MOD_KEY);
-        setIsOpen(false);
       } catch (error) {
         console.error("Failed to unload mod:", error);
         toast.error("Failed to switch to Original Site");
-      } finally {
-        setIsLoading(false);
       }
       return;
     }
 
+    // Check if we're trying to load a mod that's already loaded
+    const targetBundleUrl = modBundleUrls[modId];
+    if (targetBundleUrl && targetBundleUrl === currentBundleUrl) {
+      console.log("✅ Mod already loaded, no action needed");
+      return;
+    }
+
+    console.log("📥 Loading mod:", modId);
     setIsLoading(true);
     try {
       // Fetch the bundle URL from the backend
@@ -104,14 +149,10 @@ export function ModSwitcher() {
       }
 
       // Load the extension using the Else SDK
-      if (window.Else?.loadExtension) {
-        await window.Else.loadExtension(response.bundleUrl);
-        setSelectedMod(modId);
-        localStorage.setItem(SELECTED_MOD_KEY, modId);
-        setIsOpen(false);
-        
-        const modTitle = mods?.find((m) => m.id === modId)?.title;
-        toast.success(`Loaded ${modTitle || "mod"}`);
+      if (window.else) {
+        // Set the bundle and reload
+        window.else.setCustomBundle(response.bundleUrl);
+        window.else.reloadWithBundle();
       } else {
         throw new Error("Else SDK not loaded");
       }
@@ -120,17 +161,52 @@ export function ModSwitcher() {
       toast.error(
         error instanceof Error ? error.message : "Failed to load mod"
       );
-    } finally {
       setIsLoading(false);
     }
+    // Note: isLoading will be reset after page reload, no finally needed
   };
 
+  // Store bundle URLs for each mod to match against current bundle
+  const [modBundleUrls, setModBundleUrls] = React.useState<Record<string, string>>({});
+
+  // Fetch bundle URLs for all mods when they load
+  React.useEffect(() => {
+    if (!mods || mods.length === 0) return;
+
+    const fetchBundleUrls = async () => {
+      const urls: Record<string, string> = {};
+      for (const mod of mods) {
+        try {
+          const response = await getModBundle(mod.id);
+          if (response.bundleUrl) {
+            urls[mod.id] = response.bundleUrl;
+          }
+        } catch (error) {
+          console.error(`Failed to fetch bundle URL for ${mod.id}:`, error);
+        }
+      }
+      setModBundleUrls(urls);
+    };
+
+    fetchBundleUrls();
+  }, [mods]);
+
   const getSelectedModTitle = () => {
-    if (selectedMod === null) {
+    if (!currentBundleUrl) {
       return "Original Site";
     }
-    const mod = mods?.find((m) => m.id === selectedMod);
-    return mod?.title || "Original Site";
+    
+    // Find which mod matches the current bundle URL
+    const matchingModId = Object.entries(modBundleUrls).find(
+      ([, url]) => url === currentBundleUrl
+    )?.[0];
+    
+    if (matchingModId) {
+      const mod = mods?.find((m) => m.id === matchingModId);
+      return mod?.title || "Loaded Mod";
+    }
+    
+    return "Loaded Mod";
   };
 
   return (
@@ -142,14 +218,14 @@ export function ModSwitcher() {
               <SidebarMenuButton
                 size="sm"
                 className="h-8 py-0 w-auto w-full group/mod"
-                disabled={isLoading}
+                disabled={isLoading || !isSdkReady}
               >
                 <div className="flex items-center gap-2 min-w-0 w-full">
                   <div className="bg-purple-600 flex aspect-square size-5 items-center justify-center rounded-sm">
                     <Sparkles className="size-3 text-white" />
                   </div>
                   <span className="truncate text-sm text-foreground/90 font-medium">
-                    {isLoading ? "Loading..." : getSelectedModTitle()}
+                    {isLoading ? "Loading..." : !isSdkReady ? "Initializing..." : getSelectedModTitle()}
                   </span>
                 </div>
                 <ChevronDown
@@ -175,7 +251,7 @@ export function ModSwitcher() {
                 type="button"
                 onClick={() => handleModSelect(null)}
                 className={`w-full flex items-center gap-2 px-2 py-1.5 hover:bg-secondary/80 focus:bg-secondary/80 rounded-sm transition-colors text-sm font-normal ${
-                  selectedMod === null ? "bg-secondary/50" : ""
+                  !currentBundleUrl ? "bg-secondary/50" : ""
                 }`}
               >
                 <div className="bg-muted/20 border border-border/30 flex size-5 items-center justify-center rounded-sm">
@@ -186,25 +262,29 @@ export function ModSwitcher() {
                 </span>
               </button>
 
-              {mods?.map((mod) => (
-                <button
-                  type="button"
-                  key={mod.id}
-                  onClick={() => handleModSelect(mod.id)}
-                  className={`w-full flex items-center gap-2 px-2 py-1.5 hover:bg-secondary/80 focus:bg-secondary/80 rounded-sm transition-colors text-sm font-normal ${
-                    selectedMod === mod.id ? "bg-secondary/50" : ""
-                  }`}
-                >
-                  <div className="bg-purple-600/20 border border-purple-600/30 flex size-5 items-center justify-center rounded-sm">
-                    <span className="text-xs font-medium text-purple-600">
-                      {mod.title.charAt(0).toUpperCase()}
+              {mods?.map((mod) => {
+                // Check if this mod's bundle URL matches the current bundle
+                const isActive = currentBundleUrl && modBundleUrls[mod.id] === currentBundleUrl;
+                return (
+                  <button
+                    type="button"
+                    key={mod.id}
+                    onClick={() => handleModSelect(mod.id)}
+                    className={`w-full flex items-center gap-2 px-2 py-1.5 hover:bg-secondary/80 focus:bg-secondary/80 rounded-sm transition-colors text-sm font-normal ${
+                      isActive ? "bg-secondary/50" : ""
+                    }`}
+                  >
+                    <div className="bg-purple-600/20 border border-purple-600/30 flex size-5 items-center justify-center rounded-sm">
+                      <span className="text-xs font-medium text-purple-600">
+                        {mod.title.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    <span className="text-foreground/90 flex-1 text-left">
+                      {mod.title}
                     </span>
-                  </div>
-                  <span className="text-foreground/90 flex-1 text-left">
-                    {mod.title}
-                  </span>
-                </button>
-              ))}
+                  </button>
+                );
+              })}
             </div>
           </PopoverContent>
         </Popover>
@@ -240,4 +320,5 @@ export function ModSwitcher() {
   </div>
   );
 }
+
 
