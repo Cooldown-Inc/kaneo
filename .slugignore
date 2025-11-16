@@ -9,6 +9,10 @@ apps/docs/
 packages/libs/
 packages/typescript-config/
 
+# Keep email package source and config for build
+!packages/email/src/
+!packages/email/tsconfig.json
+
 # Exclude development files and docs
 *.md
 CHANGELOG.md
