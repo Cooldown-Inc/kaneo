@@ -101,7 +101,7 @@ export function WorkspaceSwitcher() {
               <PopoverTrigger asChild>
                 <SidebarMenuButton
                   size="sm"
-                  className="h-8 py-0 w-auto w-full group"
+                  className="h-8 py-0 w-auto w-full group/workspace"
                 >
                   <div className="flex items-end gap-2 min-w-0 w-full">
                     <div className="bg-primary flex aspect-square size-5 items-end justify-center rounded-sm">
@@ -114,7 +114,7 @@ export function WorkspaceSwitcher() {
                     </span>
                   </div>
                   <ChevronDown
-                    className="ml-1 size-3 text-muted-foreground/50 opacity-0 group-hover:opacity-100 data-[state=open]:opacity-100 data-[state=open]:rotate-180 transition-all duration-500 ease-out"
+                    className="ml-1 size-3 text-muted-foreground/50 opacity-0 group-hover/workspace:opacity-100 data-[state=open]:opacity-100 data-[state=open]:rotate-180 transition-all duration-500 ease-out"
                     data-state={isOpen ? "open" : "closed"}
                   />
                 </SidebarMenuButton>

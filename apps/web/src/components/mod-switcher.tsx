@@ -1,6 +1,7 @@
 import { ChevronDown, Sparkles } from "lucide-react";
 import * as React from "react";
 
+import { InfoPopover } from "@/components/ui/info-popover";
 import {
   Popover,
   PopoverContent,
@@ -47,28 +48,29 @@ export function ModSwitcher() {
   };
 
   return (
-    <SidebarMenu>
-      <SidebarMenuItem>
-        <Popover open={isOpen} onOpenChange={setIsOpen}>
-          <PopoverTrigger asChild>
-            <SidebarMenuButton
-              size="sm"
-              className="h-8 py-0 w-auto w-full group"
-            >
-              <div className="flex items-center gap-2 min-w-0 w-full">
-                <div className="bg-purple-600 flex aspect-square size-5 items-center justify-center rounded-sm">
-                  <Sparkles className="size-3 text-white" />
+    <div className="flex items-center gap-2 w-full">
+      <SidebarMenu className="flex-1">
+        <SidebarMenuItem>
+          <Popover open={isOpen} onOpenChange={setIsOpen}>
+            <PopoverTrigger asChild>
+              <SidebarMenuButton
+                size="sm"
+                className="h-8 py-0 w-auto w-full group/mod"
+              >
+                <div className="flex items-center gap-2 min-w-0 w-full">
+                  <div className="bg-purple-600 flex aspect-square size-5 items-center justify-center rounded-sm">
+                    <Sparkles className="size-3 text-white" />
+                  </div>
+                  <span className="truncate text-sm text-foreground/90 font-medium">
+                    {getSelectedModTitle()}
+                  </span>
                 </div>
-                <span className="truncate text-sm text-foreground/90 font-medium">
-                  {getSelectedModTitle()}
-                </span>
-              </div>
-              <ChevronDown
-                className="ml-1 size-3 text-muted-foreground/50 opacity-0 group-hover:opacity-100 data-[state=open]:opacity-100 data-[state=open]:rotate-180 transition-all duration-500 ease-out"
-                data-state={isOpen ? "open" : "closed"}
-              />
-            </SidebarMenuButton>
-          </PopoverTrigger>
+                <ChevronDown
+                  className="ml-1 size-3 text-muted-foreground/50 opacity-0 group-hover/mod:opacity-100 data-[state=open]:opacity-100 data-[state=open]:rotate-180 transition-all duration-500 ease-out"
+                  data-state={isOpen ? "open" : "closed"}
+                />
+              </SidebarMenuButton>
+            </PopoverTrigger>
           <PopoverContent
             className="w-fit min-w-48 p-0 rounded-lg"
             align="start"
@@ -121,6 +123,17 @@ export function ModSwitcher() {
         </Popover>
       </SidebarMenuItem>
     </SidebarMenu>
+    <InfoPopover title="What are Mods?" side="right" align="start">
+      <p className="mb-2">
+        Mods allow you to customize and extend the functionality of your
+        workspace with different themes, layouts, and features.
+      </p>
+      <p>
+        Select <strong>Original Site</strong> for the default experience, or
+        choose from available mods to transform your interface.
+      </p>
+    </InfoPopover>
+  </div>
   );
 }
 
