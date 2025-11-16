@@ -1,0 +1,63 @@
+# Exclude everything except API-related files
+# This dramatically reduces slug size for Heroku deployment
+
+# Exclude entire applications that aren't needed
+apps/web/
+apps/docs/
+
+# Exclude packages not needed at runtime
+packages/libs/
+packages/typescript-config/
+
+# Exclude development files and docs
+*.md
+!apps/api/README.md
+CHANGELOG.md
+CONTRIBUTING.md
+CONTRIBUTORS.svg
+ENVIRONMENT_SETUP.md
+LICENSE
+README.md
+
+# Exclude config files not needed at runtime
+.git/
+.github/
+.husky/
+.vscode/
+charts/
+compose.local.yml
+compose.yml
+commitlint.config.js
+biome.json
+turbo.json
+sync-web-repo.sh
+.buildpacks
+
+# Exclude API development files
+apps/api/src/
+apps/api/tsconfig.json
+apps/api/drizzle.config.ts
+apps/api/openapi.json
+apps/api/HEROKU_DEPLOYMENT.md
+apps/api/app.json
+apps/api/Dockerfile
+apps/api/.slugignore
+
+# Keep only compiled API code
+!apps/api/dist/
+!apps/api/drizzle/
+!apps/api/package.json
+!apps/api/Procfile
+
+# Keep email package (needed at runtime)
+!packages/email/dist/
+!packages/email/package.json
+packages/email/src/
+packages/email/tsconfig.json
+
+# Keep root config files needed for pnpm workspace
+!package.json
+!pnpm-lock.yaml
+!pnpm-workspace.yaml
+!Procfile
+

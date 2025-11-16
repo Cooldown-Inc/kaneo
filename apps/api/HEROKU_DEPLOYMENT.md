@@ -77,7 +77,9 @@ git commit -m "Prepare for Heroku deployment"
 
 **Deploy from repository root (required for monorepo)**
 
-Deploy from the repository root. The Procfile uses `pnpm --filter` to target the API package:
+Deploy from the repository root. The Procfile uses `pnpm --filter` to target the API package.
+
+**Important:** The `.slugignore` file at the root excludes unnecessary apps (web, docs) and packages to keep the slug under 500MB:
 
 1. Copy the Procfile to the root directory:
    ```bash
