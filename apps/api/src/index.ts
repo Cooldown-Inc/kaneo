@@ -13,6 +13,7 @@ import db from "./database";
 import githubIntegration from "./github-integration";
 import label from "./label";
 
+import elseRoutes from "./else";
 import mods from "./mods";
 import notification from "./notification";
 import project from "./project";
@@ -352,6 +353,7 @@ app.onError((err, c) => {
   );
 });
 
+const elseRoute = api.route("/else", elseRoutes);
 const modsRoute = api.route("/mods", mods);
 const projectRoute = api.route("/project", project);
 const taskRoute = api.route("/task", task);
@@ -393,6 +395,7 @@ serve(
 );
 
 export type AppType =
+  | typeof elseRoute
   | typeof modsRoute
   | typeof projectRoute
   | typeof taskRoute

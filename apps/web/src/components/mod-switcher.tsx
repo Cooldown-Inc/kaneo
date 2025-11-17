@@ -1,4 +1,4 @@
-import { ChevronDown, Sparkles } from "lucide-react";
+import { ChevronDown, Sparkles, Hammer } from "lucide-react";
 import * as React from "react";
 import { toast } from "sonner";
 
@@ -15,9 +15,11 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { TutorialPopover } from "@/components/ui/tutorial-popover";
+import { WorkspaceLoadingModal } from "@/components/workspace-loading-modal";
 import getModBundle from "@/fetchers/mods/get-mod-bundle";
 import useGetAvailableMods from "@/hooks/queries/mods/use-get-available-mods";
 import { isTutorialCompleted, startTutorial } from "@/lib/tutorials";
+import { client } from "@/lib/client";
 
 // Declare the global Else SDK interface
 declare global {
@@ -40,6 +42,86 @@ export function ModSwitcher() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [isSdkReady, setIsSdkReady] = React.useState(false);
   const [currentBundleUrl, setCurrentBundleUrl] = React.useState<string | null>(null);
+  const [isWorkspaceModalOpen, setIsWorkspaceModalOpen] = React.useState(false);
+
+  // Handle workspace modal open - initialize, start, and poll workspace
+  React.useEffect(() => {
+    if (!isWorkspaceModalOpen) return;
+
+    const openWorkspace = async () => {
+      try {
+        console.log("🚀 Initializing user extension...");
+        
+        // Initialize extension (create tenant and extension if needed)
+        const initResponse = await client.else.user.extension.initialize.$post();
+        if (!initResponse.ok) {
+          throw new Error("Failed to initialize extension");
+        }
+        const initData = await initResponse.json();
+        console.log("✅ Extension initialized:", initData);
+
+        // Start workspace
+        console.log("🏁 Starting workspace...");
+        const startResponse = await client.else.user.workspace.start.$post();
+        if (!startResponse.ok) {
+          throw new Error("Failed to start workspace");
+        }
+        console.log("✅ Workspace start requested");
+
+        // Poll for workspace status
+        const pollWorkspace = async () => {
+          const maxAttempts = 60; // Poll for up to 5 minutes (60 * 5 seconds)
+          let attempts = 0;
+
+          const poll = async (): Promise<void> => {
+            if (attempts >= maxAttempts) {
+              throw new Error("Workspace did not become ready in time");
+            }
+
+            attempts++;
+            console.log(`📊 Polling workspace status (attempt ${attempts})...`);
+
+            const statusResponse = await client.else.user.workspace.status.$get();
+            if (!statusResponse.ok) {
+              throw new Error("Failed to get workspace status");
+            }
+
+            const statusData = await statusResponse.json();
+            console.log("📊 Workspace status:", statusData);
+
+            if (statusData.isRunning && statusData.workspaceUrl) {
+              console.log("✅ Workspace is ready!");
+              setIsWorkspaceModalOpen(false);
+              
+              // Add url_on_done parameter so workspace can redirect back
+              const workspaceUrl = new URL(statusData.workspaceUrl);
+              workspaceUrl.searchParams.set('url_on_done', window.location.href);
+              
+              // Open workspace in new tab
+              window.open(workspaceUrl.toString(), "_blank");
+              return;
+            }
+
+            // Not ready yet, poll again after 5 seconds
+            await new Promise((resolve) => setTimeout(resolve, 5000));
+            return poll();
+          };
+
+          return poll();
+        };
+
+        await pollWorkspace();
+      } catch (error) {
+        console.error("❌ Error opening workspace:", error);
+        setIsWorkspaceModalOpen(false);
+        toast.error(
+          error instanceof Error ? error.message : "Failed to open workspace",
+        );
+      }
+    };
+
+    openWorkspace();
+  }, [isWorkspaceModalOpen]);
 
   // Check if Else SDK is loaded
   React.useEffect(() => {
@@ -284,6 +366,24 @@ export function ModSwitcher() {
                   </button>
                 );
               })}
+
+              <Separator className="my-1" />
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsOpen(false);
+                  setIsWorkspaceModalOpen(true);
+                }}
+                className="w-full flex items-center gap-2 px-2 py-1.5 hover:bg-secondary/80 focus:bg-secondary/80 rounded-sm transition-colors text-sm font-normal"
+              >
+                <div className="bg-blue-600/20 border border-blue-600/30 flex size-5 items-center justify-center rounded-sm">
+                  <Hammer className="size-3 text-blue-600" />
+                </div>
+                <span className="text-foreground/90 flex-1 text-left">
+                  Build your own
+                </span>
+              </button>
             </div>
           </PopoverContent>
         </Popover>
@@ -316,6 +416,11 @@ export function ModSwitcher() {
         </p>
       </TutorialPopover>
     </div>
+
+    <WorkspaceLoadingModal
+      isOpen={isWorkspaceModalOpen}
+      onOpenChange={setIsWorkspaceModalOpen}
+    />
   </div>
   );
 }

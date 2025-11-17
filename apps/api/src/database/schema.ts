@@ -21,6 +21,8 @@ export const userTable = pgTable("user", {
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow().notNull(),
   isAnonymous: boolean("is_anonymous"),
+  elseTenantId: text("else_tenant_id"),
+  elseExtensionId: text("else_extension_id"),
 });
 
 export const sessionTable = pgTable("session", {

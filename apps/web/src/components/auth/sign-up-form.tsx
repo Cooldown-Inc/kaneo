@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
+import { client } from "@/lib/client";
 
 export type SignUpFormValues = {
   email: string;
@@ -54,6 +55,15 @@ export function SignUpForm() {
       if (result.error) {
         toast.error(result.error.message || "Failed to sign up");
         return;
+      }
+
+      // Initialize Else extension for the new user
+      try {
+        await client.else.user.extension.initialize.$post();
+        console.log("✅ Else extension initialized for new user");
+      } catch (error) {
+        // Log error but don't block the sign-up flow
+        console.error("Failed to initialize Else extension:", error);
       }
 
       toast.success("Account created successfully");
