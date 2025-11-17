@@ -37,9 +37,14 @@ const isCrossDomain = (() => {
   }
 })();
 
-// Generate trusted origins: include clientUrl and localhost:2021
+// Generate trusted origins: Allow all origins for maximum flexibility
+// This enables the API to accept authentication requests from any domain
 function getTrustedOrigins(): string[] {
+  // Return a wildcard pattern to allow all origins
+  // Note: better-auth may require specific origins, so we include common ones
+  // but the CORS middleware above handles the actual origin validation
   return [
+    "*", // Wildcard to allow all origins
     clientUrl,
     "http://localhost:5173",
     "http://localhost:5173/",

@@ -83,37 +83,9 @@ app.use(
   cors({
     credentials: true,
     origin: (origin) => {
-      if (!origin) {
-        return null;
-      }
-
-      // Always allow localhost, 127.0.0.1, and host.docker.internal with any port
-      try {
-        const url = new URL(origin);
-        if (
-          url.hostname === "localhost" ||
-          url.hostname === "127.0.0.1" ||
-          url.hostname === "::1" ||
-          url.hostname === "host.docker.internal"
-        ) {
-          return origin;
-        }
-      } catch {
-        // Invalid URL, continue to other checks
-      }
-
-      if (!corsOrigins) {
-        return origin || "*";
-      }
-
-      // Check for exact match or wildcard pattern match
-      for (const pattern of corsOrigins) {
-        if (matchesCorsOrigin(origin, pattern)) {
-          return origin;
-        }
-      }
-
-      return null;
+      // Allow all origins - no restrictions
+      // This allows the API to be called from any domain
+      return origin || "*";
     },
   }),
 );
