@@ -1,4 +1,4 @@
-import { ChevronDown, Sparkles, Hammer } from "lucide-react";
+import { ChevronDown, Hammer } from "lucide-react";
 import * as React from "react";
 import { toast } from "sonner";
 
@@ -315,9 +315,11 @@ export function ModSwitcher() {
                 disabled={isLoading || !isSdkReady || isInElseDevEnv}
               >
                 <div className="flex items-center gap-2 min-w-0 w-full">
-                  <div className="bg-purple-600 flex aspect-square size-5 items-center justify-center rounded-sm">
-                    <Sparkles className="size-3 text-white" />
-                  </div>
+                  <img 
+                    src="/else-icon.png" 
+                    alt="Else" 
+                    className="size-5 rounded-sm"
+                  />
                   <span className="truncate text-sm text-foreground/90 font-medium">
                     {isLoading 
                       ? "Loading..." 
@@ -354,9 +356,11 @@ export function ModSwitcher() {
                   !currentBundleUrl ? "bg-secondary/50" : ""
                 }`}
               >
-                <div className="bg-muted/20 border border-border/30 flex size-5 items-center justify-center rounded-sm">
-                  <Sparkles className="size-3 text-muted-foreground" />
-                </div>
+                <img 
+                  src="/else-icon.png" 
+                  alt="Else" 
+                  className="size-5 rounded-sm"
+                />
                 <span className="text-foreground/90 flex-1 text-left">
                   Original Site
                 </span>
@@ -409,14 +413,9 @@ export function ModSwitcher() {
       </SidebarMenuItem>
     </SidebarMenu>
     <div className="relative">
-      <InfoPopover title="What are Mods?" side="right" align="start">
-        <p className="mb-2">
-          Mods allow you to customize and extend the functionality of your
-          workspace with different themes, layouts, and features.
-        </p>
+      <InfoPopover title="Toggle between prototypes" side="right" align="start">
         <p>
-          Select <strong>Original Site</strong> for the default experience, or
-          choose from available mods to transform your interface.
+          These were built with Else. Once you have tried the examples select <b>Build your own</b> to try out the Else development environment.
         </p>
       </InfoPopover>
       
