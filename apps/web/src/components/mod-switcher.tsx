@@ -422,6 +422,7 @@ export function ModSwitcher() {
       <TutorialPopover 
         tutorial="welcome" 
         step="intro"
+        title="This is the original Kaneo product"
         side="right"
         align="start"
         showArrow={true}
@@ -429,8 +430,7 @@ export function ModSwitcher() {
         className="-translate-y-2"
       >
         <p>
-          Use this dropdown to explore prototypes created with Else. 
-          When you're ready, try building your own.
+          You can toggle between the <b>Original Site</b> and prototypes built with <b>Else</b>. When you're ready, select <b>Build your own</b>.
         </p>
       </TutorialPopover>
     </div>
