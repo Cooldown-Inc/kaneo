@@ -26,7 +26,7 @@ declare global {
   interface Window {
     else?: {
       bundleLoaderVersion: string;
-      inElseDevEnvironment: boolean;
+      inElseDevEnvironment: () => boolean;
       setCustomBundle: (bundleUrl: string | undefined, reload?: boolean) => void;
       getCustomBundle: () => string | null;
       clearCustomBundle: (reload?: boolean) => void;
@@ -43,6 +43,7 @@ export function ModSwitcher() {
   const [isSdkReady, setIsSdkReady] = React.useState(false);
   const [currentBundleUrl, setCurrentBundleUrl] = React.useState<string | null>(null);
   const [isWorkspaceModalOpen, setIsWorkspaceModalOpen] = React.useState(false);
+  const [isInElseDevEnv, setIsInElseDevEnv] = React.useState(false);
 
   // Handle workspace modal open - initialize, start, and poll workspace
   React.useEffect(() => {
@@ -133,6 +134,12 @@ export function ModSwitcher() {
       if (window.else && typeof window.else.setCustomBundle === 'function' && typeof window.else.reloadWithBundle === 'function') {
         console.log("✅ Else SDK loaded successfully");
         console.log("SDK Version:", window.else.bundleLoaderVersion);
+        
+        // Check if we're in an Else dev environment
+        const inDevEnv = window.else.inElseDevEnvironment();
+        console.log("🔧 In Else Dev Environment:", inDevEnv);
+        setIsInElseDevEnv(inDevEnv);
+        
         setIsSdkReady(true);
         return true;
       }
@@ -189,6 +196,12 @@ export function ModSwitcher() {
     
     if (!isSdkReady) {
       toast.error("Else SDK is still loading. Please wait...");
+      return;
+    }
+    
+    if (isInElseDevEnv) {
+      console.log("🔧 In Else dev environment, mod loading disabled");
+      toast.error("Mod loading is disabled in Else dev environment");
       return;
     }
 
@@ -299,14 +312,20 @@ export function ModSwitcher() {
               <SidebarMenuButton
                 size="sm"
                 className="h-8 py-0 w-auto w-full group/mod"
-                disabled={isLoading || !isSdkReady}
+                disabled={isLoading || !isSdkReady || isInElseDevEnv}
               >
                 <div className="flex items-center gap-2 min-w-0 w-full">
                   <div className="bg-purple-600 flex aspect-square size-5 items-center justify-center rounded-sm">
                     <Sparkles className="size-3 text-white" />
                   </div>
                   <span className="truncate text-sm text-foreground/90 font-medium">
-                    {isLoading ? "Loading..." : !isSdkReady ? "Initializing..." : getSelectedModTitle()}
+                    {isLoading 
+                      ? "Loading..." 
+                      : !isSdkReady 
+                        ? "Initializing..." 
+                        : isInElseDevEnv 
+                          ? "Disabled" 
+                          : getSelectedModTitle()}
                   </span>
                 </div>
                 <ChevronDown
