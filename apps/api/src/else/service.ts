@@ -105,6 +105,7 @@ export async function getExtensionBundle(
 export async function createTenant(
   externalId: string,
   name: string,
+  metadata?: Record<string, any>,
 ): Promise<TenantResponse> {
   if (!ELSE_API_KEY) {
     throw new Error("ELSE_API_KEY is not configured");
@@ -112,7 +113,20 @@ export async function createTenant(
 
   const url = `${ELSE_API_BASE_URL}/products/${ELSE_PRODUCT_SLUG}/tenants`;
 
-  console.log("[Else API] Creating tenant:", { externalId, name });
+  console.log("[Else API] Creating tenant:", { externalId, name, metadata });
+
+  const requestBody: {
+    external_id: string;
+    name: string;
+    metadata?: Record<string, any>;
+  } = {
+    external_id: externalId,
+    name: name,
+  };
+
+  if (metadata) {
+    requestBody.metadata = metadata;
+  }
 
   const response = await fetch(url, {
     method: "POST",
@@ -120,10 +134,7 @@ export async function createTenant(
       Authorization: `Bearer ${ELSE_API_KEY}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      external_id: externalId,
-      name: name,
-    }),
+    body: JSON.stringify(requestBody),
   });
 
   if (!response.ok) {

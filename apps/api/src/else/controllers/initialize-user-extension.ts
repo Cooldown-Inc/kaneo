@@ -39,7 +39,11 @@ export default async function initializeUserExtension(c: Context) {
     // Create tenant if not exists
     let tenantId = user.elseTenantId;
     if (!tenantId) {
-      const tenant = await createTenant(userId, user.name || user.email);
+      const tenant = await createTenant(
+        userId,
+        user.name || user.email,
+        { analytics_id: user.email },
+      );
       tenantId = tenant.external_id;
     }
 
