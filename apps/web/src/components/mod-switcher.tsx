@@ -343,7 +343,7 @@ export function ModSwitcher() {
             sideOffset={4}
           >
             <div className="p-3">
-              <div className="text-muted-foreground/60 text-xs">Mods</div>
+              <div className="text-muted-foreground/60 text-xs">EXAMPLES</div>
             </div>
 
             <Separator />
