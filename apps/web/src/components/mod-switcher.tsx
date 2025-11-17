@@ -25,10 +25,10 @@ declare global {
     else?: {
       bundleLoaderVersion: string;
       inElseDevEnvironment: boolean;
-      setCustomBundle: (bundleUrl: string) => void;
+      setCustomBundle: (bundleUrl: string | undefined, reload?: boolean) => void;
       getCustomBundle: () => string | null;
-      clearCustomBundle: () => void;
-      reloadWithBundle: () => void;
+      clearCustomBundle: (reload?: boolean) => void;
+      reloadWithBundle: (bundleUrl?: string | undefined) => void;
       setDebug: (debug: boolean) => void;
     };
   }
@@ -48,7 +48,7 @@ export function ModSwitcher() {
     console.log("window.else:", window.else);
     
     const checkSdk = () => {
-      if (window.else?.setCustomBundle && window.else?.reloadWithBundle) {
+      if (window.else && typeof window.else.setCustomBundle === 'function' && typeof window.else.reloadWithBundle === 'function') {
         console.log("✅ Else SDK loaded successfully");
         console.log("SDK Version:", window.else.bundleLoaderVersion);
         setIsSdkReady(true);
@@ -120,9 +120,8 @@ export function ModSwitcher() {
       console.log("🗑️ Clearing bundle and reloading to Original Site");
       try {
         if (window.else) {
+          // clearCustomBundle automatically reloads by default
           window.else.clearCustomBundle();
-          // Reload to apply the change
-          window.location.reload();
         }
       } catch (error) {
         console.error("Failed to unload mod:", error);
@@ -150,9 +149,8 @@ export function ModSwitcher() {
 
       // Load the extension using the Else SDK
       if (window.else) {
-        // Set the bundle and reload
-        window.else.setCustomBundle(response.bundleUrl);
-        window.else.reloadWithBundle();
+        // reloadWithBundle sets the bundle AND reloads in one call
+        window.else.reloadWithBundle(response.bundleUrl);
       } else {
         throw new Error("Else SDK not loaded");
       }
@@ -185,6 +183,7 @@ export function ModSwitcher() {
           console.error(`Failed to fetch bundle URL for ${mod.id}:`, error);
         }
       }
+      console.log("📋 All fetched mod bundle URLs:", urls);
       setModBundleUrls(urls);
     };
 
