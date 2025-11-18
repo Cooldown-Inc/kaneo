@@ -184,6 +184,11 @@ export function ModSwitcher() {
   // Get the current bundle URL from Else SDK when SDK is ready
   React.useEffect(() => {
     if (!isSdkReady) return;
+    
+    // Don't fetch bundle in Else dev environment
+    if (window.else?.inElseDevEnvironment()) {
+      return;
+    }
 
     const bundleUrl = window.else?.getCustomBundle() || null;
     setCurrentBundleUrl(bundleUrl);
@@ -199,7 +204,8 @@ export function ModSwitcher() {
       return;
     }
     
-    if (isInElseDevEnv) {
+    // Don't do anything bundle-related in Else dev environment
+    if (window.else?.inElseDevEnvironment()) {
       console.log("🔧 In Else dev environment, mod loading disabled");
       toast.error("Mod loading is disabled in Else dev environment");
       return;
@@ -265,6 +271,12 @@ export function ModSwitcher() {
   // Fetch bundle URLs for all mods when they load
   React.useEffect(() => {
     if (!mods || mods.length === 0) return;
+    if (!isSdkReady) return;
+    
+    // Don't fetch bundles in Else dev environment
+    if (window.else?.inElseDevEnvironment()) {
+      return;
+    }
 
     const fetchBundleUrls = async () => {
       const urls: Record<string, string> = {};
@@ -283,7 +295,7 @@ export function ModSwitcher() {
     };
 
     fetchBundleUrls();
-  }, [mods]);
+  }, [mods, isSdkReady]);
 
   const getSelectedModTitle = () => {
     if (!currentBundleUrl) {
