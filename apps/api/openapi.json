@@ -516,6 +516,116 @@
         ]
       }
     },
+    "/else/user/extension/initialize": {
+      "post": {
+        "operationId": "postElseUserExtensionInitialize",
+        "summary": "Initialize user extension",
+        "description": "Creates a tenant and extension for the current user in Else",
+        "responses": {
+          "200": {
+            "description": "Extension initialized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "tenantId": {
+                      "type": "string"
+                    },
+                    "extensionId": {
+                      "type": "string"
+                    },
+                    "alreadyExists": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "tenantId",
+                    "extensionId",
+                    "alreadyExists"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/else/user/workspace/start": {
+      "post": {
+        "operationId": "postElseUserWorkspaceStart",
+        "summary": "Start user workspace",
+        "description": "Starts the Else workspace for the current user's extension",
+        "responses": {
+          "200": {
+            "description": "Workspace start initiated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/else/user/workspace/status": {
+      "get": {
+        "operationId": "getElseUserWorkspaceStatus",
+        "summary": "Get workspace status",
+        "description": "Gets the current status of the user's workspace including URL when ready",
+        "responses": {
+          "200": {
+            "description": "Workspace status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "isInitialized": {
+                      "type": "boolean"
+                    },
+                    "isRunning": {
+                      "type": "boolean"
+                    },
+                    "workspaceUrl": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "status": {
+                      "type": "string"
+                    },
+                    "extensionName": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "isInitialized",
+                    "isRunning",
+                    "workspaceUrl"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mods/available": {
       "get": {
         "operationId": "getModsAvailable",
@@ -2092,6 +2202,162 @@
             "required": true
           }
         ]
+      }
+    },
+    "/activity": {
+      "get": {
+        "operationId": "getActivity",
+        "summary": "Get activities with filters",
+        "description": "Get activities filtered by project, workspace, user, or date range",
+        "responses": {
+          "200": {
+            "description": "List of filtered activities",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "taskId": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string"
+                      },
+                      "userId": {
+                        "type": "string"
+                      },
+                      "content": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "createdAt": {
+                        "type": "string"
+                      },
+                      "taskTitle": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "taskNumber": {
+                        "anyOf": [
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "projectId": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "projectName": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "projectSlug": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "workspaceId": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "workspaceName": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "userName": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "userEmail": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "taskId",
+                      "type",
+                      "userId",
+                      "content",
+                      "createdAt",
+                      "taskTitle",
+                      "taskNumber",
+                      "projectId",
+                      "projectName",
+                      "projectSlug",
+                      "workspaceId",
+                      "workspaceName",
+                      "userName",
+                      "userEmail"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/activity/{taskId}": {

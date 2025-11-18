@@ -8,6 +8,7 @@ import createActivity from "./controllers/create-activity";
 import createComment from "./controllers/create-comment";
 import deleteComment from "./controllers/delete-comment";
 import getActivitiesFromTaskId from "./controllers/get-activities";
+import getActivitiesFiltered from "./controllers/get-activities-filtered";
 import updateComment from "./controllers/update-comment";
 
 const activitySchema = z.object({
@@ -20,7 +21,61 @@ const activitySchema = z.object({
   updatedAt: z.string(),
 });
 
+const filteredActivitySchema = z.object({
+  id: z.string(),
+  taskId: z.string(),
+  type: z.string(),
+  userId: z.string(),
+  content: z.string().nullable(),
+  createdAt: z.string(),
+  taskTitle: z.string().nullable(),
+  taskNumber: z.number().nullable(),
+  projectId: z.string().nullable(),
+  projectName: z.string().nullable(),
+  projectSlug: z.string().nullable(),
+  workspaceId: z.string().nullable(),
+  workspaceName: z.string().nullable(),
+  userName: z.string().nullable(),
+  userEmail: z.string().nullable(),
+});
+
 const activity = new Hono()
+  .get(
+    "/",
+    describeRoute({
+      summary: "Get activities with filters",
+      description: "Get activities filtered by project, workspace, user, or date range",
+      responses: {
+        200: {
+          description: "List of filtered activities",
+          content: {
+            "application/json": {
+              schema: resolver(z.array(filteredActivitySchema)),
+            },
+          },
+        },
+      },
+    }),
+    zValidator(
+      "query",
+      z.object({
+        projectId: z.string().optional(),
+        workspaceId: z.string().optional(),
+        userId: z.string().optional(),
+        createdAfter: z.string().optional(),
+      }),
+    ),
+    async (c) => {
+      const query = c.req.valid("query");
+      const activities = await getActivitiesFiltered({
+        projectId: query.projectId,
+        workspaceId: query.workspaceId,
+        userId: query.userId,
+        createdAfter: query.createdAfter,
+      });
+      return c.json(activities);
+    },
+  )
   .get(
     "/:taskId",
     describeRoute({
