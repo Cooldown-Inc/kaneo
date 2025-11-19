@@ -1,8 +1,12 @@
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
+import { HTTPException } from "hono/http-exception";
 import { describeRoute, resolver } from "hono-openapi";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { auth } from "../auth";
+import db from "../database";
+import { taskTable } from "../database/schema";
 import { publishEvent } from "../events";
 import createTask from "./controllers/create-task";
 import deleteTask from "./controllers/delete-task";
@@ -170,8 +174,21 @@ const task = new Hono<{
         position,
         userId,
       } = c.req.valid("json");
+      const user = c.get("userId");
 
-      const task = await updateTask(
+      // Get the old task before updating
+      const oldTask = await db.query.taskTable.findFirst({
+        where: eq(taskTable.id, id),
+      });
+
+      if (!oldTask) {
+        throw new HTTPException(404, {
+          message: "Task not found",
+        });
+      }
+
+      // Update the task
+      const updatedTask = await updateTask(
         id,
         title,
         status,
@@ -183,7 +200,102 @@ const task = new Hono<{
         userId,
       );
 
-      return c.json(task);
+      // Detect changes and publish events
+      if (oldTask.status !== status) {
+        await publishEvent("task.status_changed", {
+          taskId: updatedTask.id,
+          userId: user,
+          oldStatus: oldTask.status,
+          newStatus: status,
+          title: updatedTask.title,
+          type: "status_changed",
+        });
+      }
+
+      if (oldTask.priority !== priority) {
+        await publishEvent("task.priority_changed", {
+          taskId: updatedTask.id,
+          userId: user,
+          oldPriority: oldTask.priority,
+          newPriority: priority,
+          title: updatedTask.title,
+          type: "priority_changed",
+        });
+      }
+
+      // Normalize userId for comparison (undefined/empty string becomes null)
+      const normalizedUserId = userId || null;
+      const normalizedOldUserId = oldTask.userId || null;
+
+      if (normalizedOldUserId !== normalizedUserId) {
+        const members = await auth.api.listMembers({
+          headers: c.req.header(),
+        });
+
+        const newAssigneeName = normalizedUserId
+          ? members.members.find(
+              (member) => member.userId === normalizedUserId,
+            )?.user?.name
+          : null;
+
+        if (!normalizedUserId) {
+          await publishEvent("task.unassigned", {
+            taskId: updatedTask.id,
+            userId: user,
+            title: updatedTask.title,
+            type: "unassigned",
+          });
+        } else {
+          await publishEvent("task.assignee_changed", {
+            taskId: updatedTask.id,
+            userId: user,
+            oldAssignee: normalizedOldUserId,
+            newAssignee: newAssigneeName,
+            title: updatedTask.title,
+            type: "assignee_changed",
+          });
+        }
+      }
+
+      const oldDueDateStr = oldTask.dueDate
+        ? new Date(oldTask.dueDate).toISOString()
+        : null;
+      const newDueDateStr = dueDate ? new Date(dueDate).toISOString() : null;
+
+      if (oldDueDateStr !== newDueDateStr) {
+        await publishEvent("task.due_date_changed", {
+          taskId: updatedTask.id,
+          userId: user,
+          oldDueDate: oldTask.dueDate
+            ? new Date(oldTask.dueDate).toISOString()
+            : null,
+          newDueDate: dueDate || null,
+          title: updatedTask.title,
+          type: "due_date_changed",
+        });
+      }
+
+      if (oldTask.title !== title) {
+        await publishEvent("task.title_changed", {
+          taskId: updatedTask.id,
+          userId: user,
+          oldTitle: oldTask.title,
+          newTitle: title,
+          title: updatedTask.title,
+          type: "title_changed",
+        });
+      }
+
+      if (oldTask.description !== description) {
+        await publishEvent("task.description_changed", {
+          taskId: updatedTask.id,
+          userId: user,
+          title: updatedTask.title,
+          type: "description_changed",
+        });
+      }
+
+      return c.json(updatedTask);
     },
   )
   .get(
