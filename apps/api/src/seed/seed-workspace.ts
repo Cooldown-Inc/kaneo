@@ -2,12 +2,14 @@ import { createId } from "@paralleldrive/cuid2";
 import { and, eq } from "drizzle-orm";
 import db from "../database";
 import {
+  activityTable,
   labelTable,
   projectTable,
   taskTable,
   userTable,
   workspaceUserTable,
 } from "../database/schema";
+import toNormalCase from "../utils/to-normal-case";
 import getNextTaskNumber from "../task/controllers/get-next-task-number";
 import {
   SEED_COMPLETED_PROJECTS,
@@ -182,6 +184,12 @@ export async function seedWorkspace({
 
     // Step 5: Create tasks for each project
     const allUserIds = [ownerUserId, ...memberUserIds];
+    const allInsertedTasks: Array<{
+      id: string;
+      status: string;
+      userId: string | null;
+      title: string;
+    }> = [];
 
     for (const project of createdProjects) {
       if (!project) continue;
@@ -320,6 +328,16 @@ export async function seedWorkspace({
             })),
           );
         }
+
+        // Collect tasks for activity record creation
+        insertedTasks.forEach((task) => {
+          allInsertedTasks.push({
+            id: task.id,
+            status: task.status,
+            userId: task.userId,
+            title: task.title,
+          });
+        });
       }
     }
 
@@ -401,6 +419,138 @@ export async function seedWorkspace({
             })),
           );
         }
+
+        // Collect tasks for activity record creation
+        insertedTasks.forEach((task) => {
+          allInsertedTasks.push({
+            id: task.id,
+            status: task.status,
+            userId: task.userId,
+            title: task.title,
+          });
+        });
+      }
+    }
+
+    // Step 6: Create activity records for some tasks
+    // Create ~20 activity records spread over the last 48 hours
+    if (allInsertedTasks.length > 0) {
+      const now = new Date();
+      const fortyEightHoursAgo = new Date(now.getTime() - 48 * 60 * 60 * 1000);
+
+      // Filter tasks that have status other than "planned" (first status)
+      const tasksWithStatusChanges = allInsertedTasks.filter(
+        (task) => task.status !== "planned",
+      );
+
+      // Select tasks for activity records
+      // Target ~20 activity records total (some tasks will have both creation and status change)
+      const tasksForCreation = allInsertedTasks.slice(
+        0,
+        Math.min(10, allInsertedTasks.length),
+      );
+      const tasksForStatusChanges = tasksWithStatusChanges.slice(
+        0,
+        Math.min(15, tasksWithStatusChanges.length),
+      );
+
+      // Create a map to track unique tasks and their activity types
+      const taskActivityMap = new Map<
+        string,
+        { task: typeof allInsertedTasks[0]; hasCreation: boolean; hasStatusChange: boolean }
+      >();
+
+      // Add creation activities (up to 8 tasks)
+      tasksForCreation.slice(0, 8).forEach((task) => {
+        taskActivityMap.set(task.id, {
+          task,
+          hasCreation: true,
+          hasStatusChange: task.status !== "planned",
+        });
+      });
+
+      // Add status change activities (may overlap with creation tasks)
+      // Prioritize tasks that already have creation activities to get both types
+      tasksForStatusChanges.forEach((task) => {
+        const existing = taskActivityMap.get(task.id);
+        if (existing) {
+          existing.hasStatusChange = true;
+        } else {
+          // Only add new tasks if we haven't exceeded ~20 activity records
+          const currentActivityCount = Array.from(taskActivityMap.values()).reduce(
+            (sum, t) => sum + (t.hasCreation ? 1 : 0) + (t.hasStatusChange ? 1 : 0),
+            0,
+          );
+          if (currentActivityCount < 18) {
+            taskActivityMap.set(task.id, {
+              task,
+              hasCreation: false,
+              hasStatusChange: true,
+            });
+          }
+        }
+      });
+
+      const tasksForActivities = Array.from(taskActivityMap.values());
+
+      const activityRecords: Array<{
+        id: string;
+        taskId: string;
+        type: string;
+        userId: string;
+        content: string;
+        createdAt: Date;
+      }> = [];
+
+      let activityIndex = 0;
+      tasksForActivities.forEach(({ task, hasCreation, hasStatusChange }) => {
+        // Spread activities over the last 48 hours
+        const hoursAgo = (activityIndex / Math.max(tasksForActivities.length, 1)) * 48;
+        const creationTime = new Date(
+          now.getTime() - hoursAgo * 60 * 60 * 1000,
+        );
+
+        // Use task assignee or fallback to owner
+        const activityUserId = task.userId || ownerUserId;
+
+        if (hasCreation) {
+          // Create activity for task creation
+          activityRecords.push({
+            id: createId(),
+            taskId: task.id,
+            type: "task",
+            userId: activityUserId,
+            content: "created the task",
+            createdAt: creationTime,
+          });
+        }
+
+        if (hasStatusChange) {
+          // Create activity for status change (from "planned" to current status)
+          // Status change happens 0-2 hours after creation
+          const statusChangeTime = hasCreation
+            ? new Date(
+                creationTime.getTime() +
+                  Math.random() * 2 * 60 * 60 * 1000,
+              )
+            : creationTime;
+
+          activityRecords.push({
+            id: createId(),
+            taskId: task.id,
+            type: "status_changed",
+            userId: activityUserId,
+            content: `changed the status from ${toNormalCase("planned")} to ${toNormalCase(task.status)}`,
+            createdAt: statusChangeTime,
+          });
+        }
+
+        activityIndex++;
+      });
+
+      // Batch insert activity records
+      if (activityRecords.length > 0) {
+        await db.insert(activityTable).values(activityRecords);
       }
     }
   } catch (error) {
