@@ -504,8 +504,9 @@ export async function seedWorkspace({
 
       let activityIndex = 0;
       tasksForActivities.forEach(({ task, hasCreation, hasStatusChange }) => {
-        // Spread activities over the last 48 hours
-        const hoursAgo = (activityIndex / Math.max(tasksForActivities.length, 1)) * 48;
+        // Spread activities over the last 48 hours, starting from 1 hour ago
+        // This ensures all activities are at least 1 hour in the past
+        const hoursAgo = 1 + (activityIndex / Math.max(tasksForActivities.length, 1)) * 48;
         const creationTime = new Date(
           now.getTime() - hoursAgo * 60 * 60 * 1000,
         );
@@ -527,12 +528,15 @@ export async function seedWorkspace({
 
         if (hasStatusChange) {
           // Create activity for status change (from "planned" to current status)
-          // Status change happens 0-2 hours after creation
+          // Status change happens 0-2 hours after creation, but must be at least 1 hour in the past
+          const oneHourAgo = now.getTime() - 60 * 60 * 1000;
+          const maxStatusChangeDelay = Math.min(
+            2 * 60 * 60 * 1000, // Max 2 hours delay
+            Math.max(0, oneHourAgo - creationTime.getTime()), // Ensure at least 1 hour in the past
+          );
+          const statusChangeDelay = Math.max(0, Math.random() * maxStatusChangeDelay);
           const statusChangeTime = hasCreation
-            ? new Date(
-                creationTime.getTime() +
-                  Math.random() * 2 * 60 * 60 * 1000,
-              )
+            ? new Date(creationTime.getTime() + statusChangeDelay)
             : creationTime;
 
           activityRecords.push({
@@ -551,6 +555,82 @@ export async function seedWorkspace({
       // Batch insert activity records
       if (activityRecords.length > 0) {
         await db.insert(activityTable).values(activityRecords);
+      }
+
+      // Add 10 additional activity items spread over the past 7 days
+      // These provide historical activity data going further back
+      const additionalActivityRecords: Array<{
+        id: string;
+        taskId: string;
+        type: string;
+        userId: string;
+        content: string;
+        createdAt: Date;
+      }> = [];
+
+      // Get random tasks for additional activities
+      const shuffledTasks = [...allInsertedTasks].sort(() => Math.random() - 0.5);
+      const tasksForAdditionalActivities = shuffledTasks.slice(0, 10);
+
+      // Activity types and their content templates
+      const activityTemplates: Array<{
+        type: string;
+        getContent: (task: typeof allInsertedTasks[0], activityTime: Date) => string;
+      }> = [
+        { type: "comment", getContent: () => "Great progress on this!" },
+        { type: "comment", getContent: () => "Let's discuss this in the next meeting." },
+        { type: "comment", getContent: () => "This looks good to me." },
+        { type: "status_changed", getContent: (task) => 
+          `changed the status from ${toNormalCase("to-do")} to ${toNormalCase(task.status)}` },
+        { type: "status_changed", getContent: (task) => 
+          `changed the status from ${toNormalCase("in-progress")} to ${toNormalCase(task.status)}` },
+        { type: "priority_changed", getContent: () => 
+          `changed the priority from medium to high` },
+        { type: "priority_changed", getContent: () => 
+          `changed the priority from low to medium` },
+        { type: "assignee_changed", getContent: () => {
+          const randomUser = memberUsers[Math.floor(Math.random() * memberUsers.length)];
+          return `assigned the task to ${randomUser?.name || "a team member"}`;
+        }},
+        { type: "due_date_changed", getContent: (_task, activityTime) => {
+          const futureDate = new Date(activityTime);
+          futureDate.setDate(futureDate.getDate() + Math.floor(Math.random() * 14) + 1);
+          return `changed the due date to ${futureDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
+        }},
+        { type: "comment", getContent: () => "Need more information on this." },
+      ];
+
+      tasksForAdditionalActivities.forEach((task, index) => {
+        // Spread over the past 7 days, starting from 1 hour ago
+        // This ensures all activities are at least 1 hour in the past
+        const hoursAgo = 1 + (index / 9) * (7 * 24 - 1); // Spread from 1 hour to ~7 days ago
+        const activityTime = new Date(
+          now.getTime() - hoursAgo * 60 * 60 * 1000,
+        );
+
+        // Use task assignee or fallback to a random member or owner
+        const randomMember = memberUsers.length > 0 
+          ? memberUsers[Math.floor(Math.random() * memberUsers.length)]
+          : null;
+        const activityUserId = task.userId || randomMember?.id || ownerUserId;
+
+        // Select a random activity type
+        const activityTemplate = activityTemplates[Math.floor(Math.random() * activityTemplates.length)];
+        const content = activityTemplate.getContent(task, activityTime);
+
+        additionalActivityRecords.push({
+          id: createId(),
+          taskId: task.id,
+          type: activityTemplate.type,
+          userId: activityUserId,
+          content: content,
+          createdAt: activityTime,
+        });
+      });
+
+      // Batch insert additional activity records
+      if (additionalActivityRecords.length > 0) {
+        await db.insert(activityTable).values(additionalActivityRecords);
       }
     }
   } catch (error) {
