@@ -262,6 +262,57 @@ const publicProjectRoute = api.get(
   },
 );
 
+// Document auth endpoints for OpenAPI spec
+// These routes proxy to Better Auth's handler but are documented for OpenAPI
+const sessionResponseSchema = z.object({
+  data: z.object({
+    user: z.object({
+      id: z.string(),
+      name: z.string(),
+      email: z.string(),
+      emailVerified: z.boolean(),
+      image: z.string().nullable(),
+      createdAt: z.string(),
+      updatedAt: z.string(),
+    }).nullable(),
+    session: z.object({
+      id: z.string(),
+      userId: z.string(),
+      expiresAt: z.string(),
+      token: z.string(),
+      createdAt: z.string(),
+      updatedAt: z.string(),
+      ipAddress: z.string().nullable(),
+      userAgent: z.string().nullable(),
+      activeOrganizationId: z.string().nullable(),
+      activeTeamId: z.string().nullable(),
+    }).nullable(),
+  }).nullable(),
+});
+
+api.get(
+  "/auth/get-session",
+  describeRoute({
+    summary: "Get session",
+    description: "Get the current user session. Returns user and session data if authenticated, null otherwise.",
+    responses: {
+      200: {
+        description: "Session data",
+        content: {
+          "application/json": {
+            schema: resolver(sessionResponseSchema),
+          },
+        },
+      },
+    },
+  }),
+  async (c) => {
+    // Proxy to Better Auth handler
+    const response = await auth.handler(c.req.raw);
+    return response;
+  },
+);
+
 api.on(["POST", "GET", "PUT", "DELETE"], "/auth/*", (c) =>
   auth.handler(c.req.raw),
 );
