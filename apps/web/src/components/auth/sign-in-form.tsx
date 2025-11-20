@@ -53,14 +53,13 @@ export function SignInForm() {
         return;
       }
 
-      // Initialize Else extension if not already done
-      try {
-        await client.else.user.extension.initialize.$post();
+      // Initialize Else extension if not already done (non-blocking)
+      client.else.user.extension.initialize.$post().then(() => {
         console.log("✅ Else extension initialized for user");
-      } catch (error) {
+      }).catch((error) => {
         // Log error but don't block the sign-in flow
         console.error("Failed to initialize Else extension:", error);
-      }
+      });
 
       toast.success("Signed in successfully");
       setTimeout(() => {

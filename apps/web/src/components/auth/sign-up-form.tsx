@@ -57,14 +57,13 @@ export function SignUpForm() {
         return;
       }
 
-      // Initialize Else extension for the new user
-      try {
-        await client.else.user.extension.initialize.$post();
+      // Initialize Else extension for the new user (non-blocking)
+      client.else.user.extension.initialize.$post().then(() => {
         console.log("✅ Else extension initialized for new user");
-      } catch (error) {
+      }).catch((error) => {
         // Log error but don't block the sign-up flow
         console.error("Failed to initialize Else extension:", error);
-      }
+      });
 
       toast.success("Account created successfully");
       setTimeout(() => {
