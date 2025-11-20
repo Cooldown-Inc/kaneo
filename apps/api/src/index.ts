@@ -113,12 +113,29 @@ app.use("*", async (c, next) => {
   const duration = Date.now() - startTime;
   const status = c.res.status;
   
+  // Clone the response to read the body without consuming it
+  const clonedRes = c.res.clone();
+  let body: unknown = null;
+  
+  try {
+    const contentType = clonedRes.headers.get("content-type") || "";
+    if (contentType.includes("application/json")) {
+      body = await clonedRes.json();
+    } else if (contentType.includes("text/")) {
+      body = await clonedRes.text();
+    }
+  } catch (error) {
+    // If body reading fails, just log null
+    body = null;
+  }
+  
   console.log(`[${method}] ${path} ${status}`, {
     method,
     path,
     status,
     statusText: c.res.statusText,
     duration: `${duration}ms`,
+    body,
   });
 });
 
@@ -156,12 +173,29 @@ api.use("*", async (c, next) => {
   const duration = Date.now() - startTime;
   const status = c.res.status;
   
+  // Clone the response to read the body without consuming it
+  const clonedRes = c.res.clone();
+  let body: unknown = null;
+  
+  try {
+    const contentType = clonedRes.headers.get("content-type") || "";
+    if (contentType.includes("application/json")) {
+      body = await clonedRes.json();
+    } else if (contentType.includes("text/")) {
+      body = await clonedRes.text();
+    }
+  } catch (error) {
+    // If body reading fails, just log null
+    body = null;
+  }
+  
   console.log(`[${method}] ${path} ${status}`, {
     method,
     path,
     status,
     statusText: c.res.statusText,
     duration: `${duration}ms`,
+    body,
   });
 });
 
