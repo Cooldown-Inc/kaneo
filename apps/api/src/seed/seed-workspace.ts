@@ -213,31 +213,6 @@ export async function seedWorkspace({
       const taskValues = taskTemplates.map((template, index) => {
         const taskNumber = startingTaskNumber + index + 1;
 
-        // Calculate due date if needed
-        // Generate random due dates within the next 3 months (1-90 days)
-        // Use project base offset + task-specific variation to ensure:
-        // - Each project has varied earliest due dates
-        // - Tasks within a project have varied dates
-        // - All dates are always in the future (1-90 days from now)
-        let dueDate: Date | null = null;
-        if (template.hasDueDate) {
-          // Create a pseudo-random number for task-specific variation
-          const taskSeed = `${projectSlug}-${index}-${template.title}`;
-          let taskHash = 0;
-          for (let i = 0; i < taskSeed.length; i++) {
-            const char = taskSeed.charCodeAt(i);
-            taskHash = (taskHash << 5) - taskHash + char;
-            taskHash = taskHash & taskHash;
-          }
-          // Task variation: 1-30 days
-          const taskVariation = Math.abs(taskHash % 30) + 1;
-          // Total days: project base (0-59) + task variation (1-30) = 1-89 days
-          // Ensure it doesn't exceed 90 days
-          const daysFromNow = Math.min(projectBaseOffset + taskVariation, 90);
-          dueDate = new Date();
-          dueDate.setDate(dueDate.getDate() + daysFromNow);
-        }
-
         // Assignment logic:
         // - Planned (backlog) tasks: always unassigned
         // - To-do tasks: ~1/3 unassigned (deterministically)
@@ -255,6 +230,42 @@ export async function seedWorkspace({
           // In-progress, in-review, done: always assigned
           if (allUserIds.length > 0) {
             assigneeId = allUserIds[index % allUserIds.length] || null;
+          }
+        }
+
+        // Calculate due date if needed
+        let dueDate: Date | null = null;
+        if (template.hasDueDate) {
+          // If task is assigned to the current user (owner), set some to today's date
+          const isAssignedToCurrentUser = assigneeId === ownerUserId;
+          const shouldUseToday = isAssignedToCurrentUser && (index % 4 === 0 || index % 4 === 1); // ~50% of current user's tasks
+          
+          if (shouldUseToday) {
+            // Set due date to today (current date)
+            dueDate = new Date();
+            // Set time to end of day to ensure it's today
+            dueDate.setHours(23, 59, 59, 999);
+          } else {
+            // Generate random due dates within the next 3 months (1-90 days)
+            // Use project base offset + task-specific variation to ensure:
+            // - Each project has varied earliest due dates
+            // - Tasks within a project have varied dates
+            // - All dates are always in the future (1-90 days from now)
+            // Create a pseudo-random number for task-specific variation
+            const taskSeed = `${projectSlug}-${index}-${template.title}`;
+            let taskHash = 0;
+            for (let i = 0; i < taskSeed.length; i++) {
+              const char = taskSeed.charCodeAt(i);
+              taskHash = (taskHash << 5) - taskHash + char;
+              taskHash = taskHash & taskHash;
+            }
+            // Task variation: 1-30 days
+            const taskVariation = Math.abs(taskHash % 30) + 1;
+            // Total days: project base (0-59) + task variation (1-30) = 1-89 days
+            // Ensure it doesn't exceed 90 days
+            const daysFromNow = Math.min(projectBaseOffset + taskVariation, 90);
+            dueDate = new Date();
+            dueDate.setDate(dueDate.getDate() + daysFromNow);
           }
         }
 
