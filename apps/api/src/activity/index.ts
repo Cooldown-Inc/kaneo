@@ -39,7 +39,11 @@ const filteredActivitySchema = z.object({
   userEmail: z.string().nullable(),
 });
 
-const activity = new Hono()
+const activity = new Hono<{
+  Variables: {
+    userId: string;
+  };
+}>()
   .get(
     "/",
     describeRoute({
