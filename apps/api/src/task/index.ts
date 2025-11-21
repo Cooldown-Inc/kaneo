@@ -13,6 +13,7 @@ import deleteTask from "./controllers/delete-task";
 import exportTasks from "./controllers/export-tasks";
 import getTask from "./controllers/get-task";
 import getTasks from "./controllers/get-tasks";
+import getTasksByWorkspace from "./controllers/get-tasks-by-workspace";
 import importTasks from "./controllers/import-tasks";
 import updateTask from "./controllers/update-task";
 import updateTaskAssignee from "./controllers/update-task-assignee";
@@ -61,6 +62,56 @@ const task = new Hono<{
     async (c) => {
       const { projectId } = c.req.valid("param");
       const tasks = await getTasks(projectId);
+      return c.json(tasks);
+    },
+  )
+  .get(
+    "/workspace/:workspaceId",
+    describeRoute({
+      summary: "Get tasks by workspace",
+      description: "Get tasks for a workspace with optional filters",
+      responses: {
+        200: {
+          description: "List of filtered tasks",
+          content: {
+            "application/json": {
+              schema: resolver(z.array(taskSchema)),
+            },
+          },
+        },
+      },
+    }),
+    zValidator("param", z.object({ workspaceId: z.string() })),
+    zValidator(
+      "query",
+      z.object({
+        projectId: z.string().optional(),
+        userId: z.string().optional(),
+        status: z.string().optional(),
+        labels: z.string().optional(), // Comma-separated list of label names
+        minimumDueDate: z.string().optional(),
+        maximumDueDate: z.string().optional(),
+      }),
+    ),
+    async (c) => {
+      const { workspaceId } = c.req.valid("param");
+      const query = c.req.valid("query");
+
+      // Parse labels from comma-separated string
+      const labels = query.labels
+        ? query.labels.split(",").map((l) => l.trim()).filter(Boolean)
+        : undefined;
+
+      const tasks = await getTasksByWorkspace({
+        workspaceId,
+        projectId: query.projectId,
+        userId: query.userId,
+        status: query.status,
+        labels,
+        minimumDueDate: query.minimumDueDate,
+        maximumDueDate: query.maximumDueDate,
+      });
+
       return c.json(tasks);
     },
   )

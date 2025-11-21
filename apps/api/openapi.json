@@ -1311,6 +1311,100 @@
         ]
       }
     },
+    "/api/task/workspace/{workspaceId}": {
+      "get": {
+        "operationId": "getTaskWorkspace:workspaceId",
+        "summary": "Get tasks by workspace",
+        "description": "Get tasks for a workspace with optional filters",
+        "responses": {
+          "200": {
+            "description": "List of filtered tasks",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "title": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "type": "string"
+                      },
+                      "priority": {
+                        "type": "string"
+                      },
+                      "dueDate": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "projectId": {
+                        "type": "string"
+                      },
+                      "userId": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "position": {
+                        "type": "number"
+                      },
+                      "createdAt": {
+                        "type": "string"
+                      },
+                      "updatedAt": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "title",
+                      "description",
+                      "status",
+                      "priority",
+                      "dueDate",
+                      "projectId",
+                      "userId",
+                      "position",
+                      "createdAt",
+                      "updatedAt"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "workspaceId",
+            "required": true
+          }
+        ]
+      }
+    },
     "/api/task/{projectId}": {
       "post": {
         "operationId": "postTask:projectId",
