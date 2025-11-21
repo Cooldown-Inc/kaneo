@@ -7,12 +7,12 @@
   },
   "servers": [
     {
-      "url": "http://localhost:1337/api",
+      "url": "http://localhost:1337",
       "description": "API Server"
     }
   ],
   "paths": {
-    "/health": {
+    "/api/health": {
       "get": {
         "operationId": "getHealth",
         "summary": "Health check",
@@ -39,7 +39,7 @@
         }
       }
     },
-    "/config": {
+    "/api/config": {
       "get": {
         "operationId": "getConfig",
         "summary": "Get config",
@@ -82,7 +82,7 @@
         }
       }
     },
-    "/github-integration/app-info": {
+    "/api/github-integration/app-info": {
       "get": {
         "operationId": "getGithub-integrationApp-info",
         "summary": "Get GitHub app info",
@@ -116,7 +116,7 @@
         }
       }
     },
-    "/github-integration/repositories": {
+    "/api/github-integration/repositories": {
       "get": {
         "operationId": "getGithub-integrationRepositories",
         "summary": "List user repositories",
@@ -158,7 +158,7 @@
         }
       }
     },
-    "/github-integration/verify": {
+    "/api/github-integration/verify": {
       "post": {
         "operationId": "postGithub-integrationVerify",
         "summary": "Verify GitHub installation",
@@ -188,7 +188,7 @@
         }
       }
     },
-    "/github-integration/project/{projectId}": {
+    "/api/github-integration/project/{projectId}": {
       "get": {
         "operationId": "getGithub-integrationProject:projectId",
         "summary": "Get GitHub integration",
@@ -342,7 +342,7 @@
         ]
       }
     },
-    "/github-integration/import-issues": {
+    "/api/github-integration/import-issues": {
       "post": {
         "operationId": "postGithub-integrationImport-issues",
         "summary": "Import GitHub issues",
@@ -373,7 +373,7 @@
         }
       }
     },
-    "/github-integration/webhook": {
+    "/api/github-integration/webhook": {
       "post": {
         "operationId": "postGithub-integrationWebhook",
         "summary": "GitHub webhook",
@@ -418,7 +418,7 @@
         }
       }
     },
-    "/public-project/{id}": {
+    "/api/public-project/{id}": {
       "get": {
         "operationId": "getPublic-project:id",
         "summary": "Get public project",
@@ -516,7 +516,7 @@
         ]
       }
     },
-    "/auth/get-session": {
+    "/api/auth/get-session": {
       "get": {
         "operationId": "getAuthGet-session",
         "summary": "Get session",
@@ -529,136 +529,112 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "data": {
+                    "user": {
                       "anyOf": [
                         {
                           "type": "object",
                           "properties": {
-                            "user": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "email": {
+                              "type": "string"
+                            },
+                            "emailVerified": {
+                              "type": "boolean"
+                            },
+                            "image": {
                               "anyOf": [
                                 {
-                                  "type": "object",
-                                  "properties": {
-                                    "id": {
-                                      "type": "string"
-                                    },
-                                    "name": {
-                                      "type": "string"
-                                    },
-                                    "email": {
-                                      "type": "string"
-                                    },
-                                    "emailVerified": {
-                                      "type": "boolean"
-                                    },
-                                    "image": {
-                                      "anyOf": [
-                                        {
-                                          "type": "string"
-                                        },
-                                        {
-                                          "type": "null"
-                                        }
-                                      ]
-                                    },
-                                    "createdAt": {
-                                      "type": "string"
-                                    },
-                                    "updatedAt": {
-                                      "type": "string"
-                                    }
-                                  },
-                                  "required": [
-                                    "id",
-                                    "name",
-                                    "email",
-                                    "emailVerified",
-                                    "image",
-                                    "createdAt",
-                                    "updatedAt"
-                                  ]
+                                  "type": "string"
                                 },
                                 {
                                   "type": "null"
                                 }
                               ]
                             },
-                            "session": {
+                            "createdAt": {
+                              "type": "string"
+                            },
+                            "updatedAt": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "name",
+                            "email",
+                            "emailVerified",
+                            "image",
+                            "createdAt",
+                            "updatedAt"
+                          ]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "session": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "userId": {
+                              "type": "string"
+                            },
+                            "expiresAt": {
+                              "type": "string"
+                            },
+                            "token": {
+                              "type": "string"
+                            },
+                            "createdAt": {
+                              "type": "string"
+                            },
+                            "updatedAt": {
+                              "type": "string"
+                            },
+                            "ipAddress": {
                               "anyOf": [
                                 {
-                                  "type": "object",
-                                  "properties": {
-                                    "id": {
-                                      "type": "string"
-                                    },
-                                    "userId": {
-                                      "type": "string"
-                                    },
-                                    "expiresAt": {
-                                      "type": "string"
-                                    },
-                                    "token": {
-                                      "type": "string"
-                                    },
-                                    "createdAt": {
-                                      "type": "string"
-                                    },
-                                    "updatedAt": {
-                                      "type": "string"
-                                    },
-                                    "ipAddress": {
-                                      "anyOf": [
-                                        {
-                                          "type": "string"
-                                        },
-                                        {
-                                          "type": "null"
-                                        }
-                                      ]
-                                    },
-                                    "userAgent": {
-                                      "anyOf": [
-                                        {
-                                          "type": "string"
-                                        },
-                                        {
-                                          "type": "null"
-                                        }
-                                      ]
-                                    },
-                                    "activeOrganizationId": {
-                                      "anyOf": [
-                                        {
-                                          "type": "string"
-                                        },
-                                        {
-                                          "type": "null"
-                                        }
-                                      ]
-                                    },
-                                    "activeTeamId": {
-                                      "anyOf": [
-                                        {
-                                          "type": "string"
-                                        },
-                                        {
-                                          "type": "null"
-                                        }
-                                      ]
-                                    }
-                                  },
-                                  "required": [
-                                    "id",
-                                    "userId",
-                                    "expiresAt",
-                                    "token",
-                                    "createdAt",
-                                    "updatedAt",
-                                    "ipAddress",
-                                    "userAgent",
-                                    "activeOrganizationId",
-                                    "activeTeamId"
-                                  ]
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "userAgent": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "activeOrganizationId": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "activeTeamId": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
                                 },
                                 {
                                   "type": "null"
@@ -667,8 +643,16 @@
                             }
                           },
                           "required": [
-                            "user",
-                            "session"
+                            "id",
+                            "userId",
+                            "expiresAt",
+                            "token",
+                            "createdAt",
+                            "updatedAt",
+                            "ipAddress",
+                            "userAgent",
+                            "activeOrganizationId",
+                            "activeTeamId"
                           ]
                         },
                         {
@@ -678,7 +662,8 @@
                     }
                   },
                   "required": [
-                    "data"
+                    "user",
+                    "session"
                   ]
                 }
               }
@@ -687,7 +672,7 @@
         }
       }
     },
-    "/else/user/extension/initialize": {
+    "/api/else/user/extension/initialize": {
       "post": {
         "operationId": "postElseUserExtensionInitialize",
         "summary": "Initialize user extension",
@@ -722,7 +707,7 @@
         }
       }
     },
-    "/else/user/workspace/start": {
+    "/api/else/user/workspace/start": {
       "post": {
         "operationId": "postElseUserWorkspaceStart",
         "summary": "Start user workspace",
@@ -749,7 +734,7 @@
         }
       }
     },
-    "/else/user/workspace/status": {
+    "/api/else/user/workspace/status": {
       "get": {
         "operationId": "getElseUserWorkspaceStatus",
         "summary": "Get workspace status",
@@ -797,7 +782,7 @@
         }
       }
     },
-    "/mods/available": {
+    "/api/mods/available": {
       "get": {
         "operationId": "getModsAvailable",
         "summary": "Get available mods",
@@ -831,7 +816,7 @@
         }
       }
     },
-    "/mods/{modId}/bundle": {
+    "/api/mods/{modId}/bundle": {
       "get": {
         "operationId": "getMods:modIdBundle",
         "summary": "Get mod bundle URL",
@@ -875,7 +860,7 @@
         ]
       }
     },
-    "/project": {
+    "/api/project": {
       "get": {
         "operationId": "getProject",
         "summary": "Get projects",
@@ -1008,7 +993,7 @@
         }
       }
     },
-    "/project/{id}": {
+    "/api/project/{id}": {
       "delete": {
         "operationId": "deleteProject:id",
         "summary": "Delete project",
@@ -1232,7 +1217,7 @@
         ]
       }
     },
-    "/task/tasks/{projectId}": {
+    "/api/task/tasks/{projectId}": {
       "get": {
         "operationId": "getTaskTasks:projectId",
         "summary": "Get tasks by project",
@@ -1326,7 +1311,7 @@
         ]
       }
     },
-    "/task/{projectId}": {
+    "/api/task/{projectId}": {
       "post": {
         "operationId": "postTask:projectId",
         "summary": "Create task",
@@ -1417,7 +1402,7 @@
         ]
       }
     },
-    "/task/{id}": {
+    "/api/task/{id}": {
       "get": {
         "operationId": "getTask:id",
         "summary": "Get task",
@@ -1686,7 +1671,7 @@
         ]
       }
     },
-    "/task/export/{projectId}": {
+    "/api/task/export/{projectId}": {
       "get": {
         "operationId": "getTaskExport:projectId",
         "summary": "Export tasks",
@@ -1788,7 +1773,7 @@
         ]
       }
     },
-    "/task/import/{projectId}": {
+    "/api/task/import/{projectId}": {
       "post": {
         "operationId": "postTaskImport:projectId",
         "summary": "Import tasks",
@@ -1829,7 +1814,7 @@
         ]
       }
     },
-    "/task/status/{id}": {
+    "/api/task/status/{id}": {
       "put": {
         "operationId": "putTaskStatus:id",
         "summary": "Update task status",
@@ -1920,7 +1905,7 @@
         ]
       }
     },
-    "/task/priority/{id}": {
+    "/api/task/priority/{id}": {
       "put": {
         "operationId": "putTaskPriority:id",
         "summary": "Update task priority",
@@ -2011,7 +1996,7 @@
         ]
       }
     },
-    "/task/assignee/{id}": {
+    "/api/task/assignee/{id}": {
       "put": {
         "operationId": "putTaskAssignee:id",
         "summary": "Update task assignee",
@@ -2102,7 +2087,7 @@
         ]
       }
     },
-    "/task/due-date/{id}": {
+    "/api/task/due-date/{id}": {
       "put": {
         "operationId": "putTaskDue-date:id",
         "summary": "Update task due date",
@@ -2193,7 +2178,7 @@
         ]
       }
     },
-    "/task/title/{id}": {
+    "/api/task/title/{id}": {
       "put": {
         "operationId": "putTaskTitle:id",
         "summary": "Update task title",
@@ -2284,7 +2269,7 @@
         ]
       }
     },
-    "/task/description/{id}": {
+    "/api/task/description/{id}": {
       "put": {
         "operationId": "putTaskDescription:id",
         "summary": "Update task description",
@@ -2375,7 +2360,7 @@
         ]
       }
     },
-    "/activity": {
+    "/api/activity": {
       "get": {
         "operationId": "getActivity",
         "summary": "Get activities with filters",
@@ -2531,7 +2516,7 @@
         }
       }
     },
-    "/activity/{taskId}": {
+    "/api/activity/{taskId}": {
       "get": {
         "operationId": "getActivity:taskId",
         "summary": "Get activities by task",
@@ -2595,7 +2580,7 @@
         ]
       }
     },
-    "/activity/create": {
+    "/api/activity/create": {
       "post": {
         "operationId": "postActivityCreate",
         "summary": "Create activity",
@@ -2646,7 +2631,7 @@
         }
       }
     },
-    "/activity/comment": {
+    "/api/activity/comment": {
       "post": {
         "operationId": "postActivityComment",
         "summary": "Create comment",
@@ -2771,7 +2756,7 @@
         }
       }
     },
-    "/time-entry/task/{taskId}": {
+    "/api/time-entry/task/{taskId}": {
       "get": {
         "operationId": "getTime-entryTask:taskId",
         "summary": "Get time entries by task",
@@ -2864,7 +2849,7 @@
         ]
       }
     },
-    "/time-entry/{id}": {
+    "/api/time-entry/{id}": {
       "get": {
         "operationId": "getTime-entry:id",
         "summary": "Get time entry",
@@ -3042,7 +3027,7 @@
         ]
       }
     },
-    "/time-entry": {
+    "/api/time-entry": {
       "post": {
         "operationId": "postTime-entry",
         "summary": "Create time entry",
@@ -3122,7 +3107,7 @@
         }
       }
     },
-    "/label/task/{taskId}": {
+    "/api/label/task/{taskId}": {
       "get": {
         "operationId": "getLabelTask:taskId",
         "summary": "Get labels by task",
@@ -3193,7 +3178,7 @@
         ]
       }
     },
-    "/label/workspace/{workspaceId}": {
+    "/api/label/workspace/{workspaceId}": {
       "get": {
         "operationId": "getLabelWorkspace:workspaceId",
         "summary": "Get labels by workspace",
@@ -3264,7 +3249,7 @@
         ]
       }
     },
-    "/label": {
+    "/api/label": {
       "post": {
         "operationId": "postLabel",
         "summary": "Create label",
@@ -3322,7 +3307,7 @@
         }
       }
     },
-    "/label/{id}": {
+    "/api/label/{id}": {
       "delete": {
         "operationId": "deleteLabel:id",
         "summary": "Delete label",
@@ -3522,7 +3507,7 @@
         ]
       }
     },
-    "/notification": {
+    "/api/notification": {
       "get": {
         "operationId": "getNotification",
         "summary": "Get notifications",
@@ -3705,7 +3690,7 @@
         }
       }
     },
-    "/notification/{id}/read": {
+    "/api/notification/{id}/read": {
       "patch": {
         "operationId": "patchNotification:idRead",
         "summary": "Mark notification as read",
@@ -3806,7 +3791,7 @@
         ]
       }
     },
-    "/notification/read-all": {
+    "/api/notification/read-all": {
       "patch": {
         "operationId": "patchNotificationRead-all",
         "summary": "Mark all notifications as read",
@@ -3833,7 +3818,7 @@
         }
       }
     },
-    "/notification/clear-all": {
+    "/api/notification/clear-all": {
       "delete": {
         "operationId": "deleteNotificationClear-all",
         "summary": "Clear all notifications",
@@ -3860,7 +3845,7 @@
         }
       }
     },
-    "/search": {
+    "/api/search": {
       "get": {
         "operationId": "getSearch",
         "summary": "Global search",

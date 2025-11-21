@@ -220,27 +220,86 @@ api.get(
   },
 );
 
+// Helper function to transform OpenAPI spec
+function transformOpenAPISpec(spec: unknown): unknown {
+  if (typeof spec !== "object" || spec === null) {
+    return spec;
+  }
+  
+  const specObj = spec as Record<string, unknown>;
+  
+  // Add /api prefix to all paths
+  if (specObj.paths && typeof specObj.paths === "object") {
+    const newPaths: Record<string, unknown> = {};
+    for (const [path, pathItem] of Object.entries(specObj.paths)) {
+      newPaths[`/api${path}`] = pathItem;
+    }
+    specObj.paths = newPaths;
+  }
+  
+  // Update server URL to remove /api since it's now in paths
+  if (specObj.servers && Array.isArray(specObj.servers) && specObj.servers.length > 0) {
+    const server = specObj.servers[0] as { url?: string };
+    if (server.url) {
+      server.url = server.url.replace(/\/api$/, "");
+    }
+  }
+  
+  return specObj;
+}
+
 // OpenAPI spec endpoint - automatically generates spec from routes with describeRoute
 api.get(
   "/openapi",
-  openAPIRouteHandler(api, {
-    documentation: {
-      openapi: "3.1.0",
-      info: {
-        title: "Kaneo API",
-        version: "1.0.0",
-        description: "API specification for Kaneo",
-      },
-      servers: [
-        {
-          url: process.env.KANEO_API_URL
-            ? `${process.env.KANEO_API_URL}/api`
-            : "http://localhost:1337/api",
-          description: "API Server",
+  async (c, next) => {
+    // Create the base handler
+    const baseHandler = openAPIRouteHandler(api, {
+      documentation: {
+        openapi: "3.1.0",
+        info: {
+          title: "Kaneo API",
+          version: "1.0.0",
+          description: "API specification for Kaneo",
         },
-      ],
-    },
-  }),
+        servers: [
+          {
+            url: process.env.KANEO_API_URL
+              ? `${process.env.KANEO_API_URL}/api`
+              : "http://localhost:1337/api",
+            description: "API Server",
+          },
+        ],
+      },
+    });
+    
+    // Call the base handler
+    const result = await baseHandler(c, next);
+    
+    // If handler returned a Response, transform it
+    if (result instanceof Response) {
+      const spec = await result.json();
+      const transformedSpec = transformOpenAPISpec(spec);
+      return c.json(transformedSpec);
+    }
+    
+    // If handler set response on context, we need to intercept it differently
+    // Try to read from c.res if available
+    if (c.res && c.res.body) {
+      try {
+        // Create a new response from the existing one
+        const responseText = await c.res.text();
+        const spec = JSON.parse(responseText);
+        const transformedSpec = transformOpenAPISpec(spec);
+        return c.json(transformedSpec);
+      } catch (error) {
+        // If reading fails, return the original result
+        console.error("Failed to transform OpenAPI spec:", error);
+        return result;
+      }
+    }
+    
+    return result;
+  },
 );
 
 const configRoute = api.route("/config", config);
@@ -299,28 +358,26 @@ const publicProjectRoute = api.get(
 // Document auth endpoints for OpenAPI spec
 // These routes proxy to Better Auth's handler but are documented for OpenAPI
 const sessionResponseSchema = z.object({
-  data: z.object({
-    user: z.object({
-      id: z.string(),
-      name: z.string(),
-      email: z.string(),
-      emailVerified: z.boolean(),
-      image: z.string().nullable(),
-      createdAt: z.string(),
-      updatedAt: z.string(),
-    }).nullable(),
-    session: z.object({
-      id: z.string(),
-      userId: z.string(),
-      expiresAt: z.string(),
-      token: z.string(),
-      createdAt: z.string(),
-      updatedAt: z.string(),
-      ipAddress: z.string().nullable(),
-      userAgent: z.string().nullable(),
-      activeOrganizationId: z.string().nullable(),
-      activeTeamId: z.string().nullable(),
-    }).nullable(),
+  user: z.object({
+    id: z.string(),
+    name: z.string(),
+    email: z.string(),
+    emailVerified: z.boolean(),
+    image: z.string().nullable(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+  }).nullable(),
+  session: z.object({
+    id: z.string(),
+    userId: z.string(),
+    expiresAt: z.string(),
+    token: z.string(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+    ipAddress: z.string().nullable(),
+    userAgent: z.string().nullable(),
+    activeOrganizationId: z.string().nullable(),
+    activeTeamId: z.string().nullable(),
   }).nullable(),
 });
 
