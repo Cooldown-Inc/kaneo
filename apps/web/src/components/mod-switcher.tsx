@@ -283,11 +283,13 @@ export function ModSwitcher() {
       for (const mod of mods) {
         try {
           const response = await getModBundle(mod.id);
+          // Only store bundle URLs that exist (not null)
           if (response.bundleUrl) {
             urls[mod.id] = response.bundleUrl;
           }
         } catch (error) {
-          console.error(`Failed to fetch bundle URL for ${mod.id}:`, error);
+          // Silently handle errors - mods without bundles won't be available
+          console.log(`Mod ${mod.id} is not available (no bundle)`);
         }
       }
       console.log("📋 All fetched mod bundle URLs:", urls);
@@ -378,7 +380,7 @@ export function ModSwitcher() {
                 </span>
               </button>
 
-              {mods?.map((mod) => {
+              {mods?.filter((mod) => modBundleUrls[mod.id]).map((mod) => {
                 // Check if this mod's bundle URL matches the current bundle
                 const isActive = currentBundleUrl && modBundleUrls[mod.id] === currentBundleUrl;
                 return (

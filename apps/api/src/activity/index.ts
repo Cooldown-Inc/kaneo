@@ -44,7 +44,7 @@ const activity = new Hono()
     "/",
     describeRoute({
       summary: "Get activities with filters",
-      description: "Get activities filtered by project, workspace, user, or date range",
+      description: "Get activities filtered by project, workspace, user, or date range. Requires workspaceId and user must have access to the workspace.",
       responses: {
         200: {
           description: "List of filtered activities",
@@ -60,18 +60,25 @@ const activity = new Hono()
       "query",
       z.object({
         projectId: z.string().optional(),
-        workspaceId: z.string().optional(),
+        workspaceId: z.string(),
         userId: z.string().optional(),
         createdAfter: z.string().optional(),
       }),
     ),
     async (c) => {
       const query = c.req.valid("query");
+      const userId = c.get("userId");
+      
+      if (!userId) {
+        return c.json({ error: "Unauthorized" }, 401);
+      }
+
       const activities = await getActivitiesFiltered({
         projectId: query.projectId,
         workspaceId: query.workspaceId,
         userId: query.userId,
         createdAfter: query.createdAfter,
+        requestingUserId: userId,
       });
       return c.json(activities);
     },

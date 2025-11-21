@@ -1,4 +1,4 @@
-import { and, eq, gte, inArray, lte, or, sql } from "drizzle-orm";
+import { and, eq, gte, inArray, lte, sql } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import db from "../../database";
 import {
@@ -6,6 +6,7 @@ import {
   projectTable,
   taskTable,
   userTable,
+  workspaceUserTable,
 } from "../../database/schema";
 
 interface GetTasksByWorkspaceParams {
@@ -16,6 +17,7 @@ interface GetTasksByWorkspaceParams {
   labels?: string[];
   minimumDueDate?: string;
   maximumDueDate?: string;
+  requestingUserId: string;
 }
 
 async function getTasksByWorkspace(params: GetTasksByWorkspaceParams) {
@@ -27,7 +29,26 @@ async function getTasksByWorkspace(params: GetTasksByWorkspaceParams) {
     labels,
     minimumDueDate,
     maximumDueDate,
+    requestingUserId,
   } = params;
+
+  // Validate that the requesting user has access to the workspace
+  const workspaceMember = await db
+    .select()
+    .from(workspaceUserTable)
+    .where(
+      and(
+        eq(workspaceUserTable.workspaceId, workspaceId),
+        eq(workspaceUserTable.userId, requestingUserId),
+      ),
+    )
+    .limit(1);
+
+  if (workspaceMember.length === 0) {
+    throw new HTTPException(403, {
+      message: "You do not have access to this workspace",
+    });
+  }
 
   // Build where conditions
   const conditions = [];

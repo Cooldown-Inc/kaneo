@@ -69,7 +69,7 @@ const task = new Hono<{
     "/workspace/:workspaceId",
     describeRoute({
       summary: "Get tasks by workspace",
-      description: "Get tasks for a workspace with optional filters",
+      description: "Get tasks for a workspace with optional filters. User must have access to the workspace.",
       responses: {
         200: {
           description: "List of filtered tasks",
@@ -96,6 +96,11 @@ const task = new Hono<{
     async (c) => {
       const { workspaceId } = c.req.valid("param");
       const query = c.req.valid("query");
+      const userId = c.get("userId");
+
+      if (!userId) {
+        return c.json({ error: "Unauthorized" }, 401);
+      }
 
       // Parse labels from comma-separated string
       const labels = query.labels
@@ -110,6 +115,7 @@ const task = new Hono<{
         labels,
         minimumDueDate: query.minimumDueDate,
         maximumDueDate: query.maximumDueDate,
+        requestingUserId: userId,
       });
 
       return c.json(tasks);

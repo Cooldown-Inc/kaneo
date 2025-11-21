@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import useCreateWorkspace from "@/hooks/queries/workspace/use-create-workspace";
+import { authClient } from "@/lib/auth-client";
 import { useUserPreferencesStore } from "@/store/user-preferences";
 
 interface CreateWorkspaceModalProps {
@@ -58,6 +59,10 @@ function CreateWorkspaceModal({ open, onClose }: CreateWorkspaceModalProps) {
       toast.success("Workspace created successfully");
       await queryClient.invalidateQueries({ queryKey: ["workspaces"] });
 
+      // Set the workspace as active in the auth client
+      await authClient.organization.setActive({
+        organizationId: createdWorkspace.id,
+      });
       setActiveWorkspaceId(createdWorkspace.id);
       navigate({
         to: "/dashboard/workspace/$workspaceId",

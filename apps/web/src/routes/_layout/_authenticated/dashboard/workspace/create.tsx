@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import useCreateWorkspace from "@/hooks/queries/workspace/use-create-workspace";
+import { authClient } from "@/lib/auth-client";
 import { useUserPreferencesStore } from "@/store/user-preferences";
 
 export const Route = createFileRoute(
@@ -20,6 +21,7 @@ export const Route = createFileRoute(
 function RouteComponent() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -36,6 +38,7 @@ function RouteComponent() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setHasAttemptedSubmit(true);
     if (!name.trim()) return;
 
     try {
@@ -43,6 +46,10 @@ function RouteComponent() {
       toast.success("Workspace created successfully");
       await queryClient.invalidateQueries({ queryKey: ["workspaces"] });
 
+      // Set the workspace as active in the auth client
+      await authClient.organization.setActive({
+        organizationId: createdWorkspace.id,
+      });
       setActiveWorkspaceId(createdWorkspace.id);
       navigate({
         to: "/dashboard/workspace/$workspaceId",
@@ -99,7 +106,7 @@ function RouteComponent() {
                       className="h-12 text-lg font-medium border-zinc-300 dark:border-zinc-600 focus:border-indigo-500 dark:focus:border-indigo-400 focus:ring-indigo-500 dark:focus:ring-indigo-400"
                       required
                     />
-                    {!name.trim() && (
+                    {hasAttemptedSubmit && !name.trim() && (
                       <p className="text-red-500 text-sm mt-1">Required</p>
                     )}
                   </div>

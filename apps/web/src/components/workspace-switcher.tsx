@@ -88,10 +88,6 @@ export function WorkspaceSwitcher() {
     },
   });
 
-  if (!workspace) {
-    return null;
-  }
-
   return (
     <>
       <div className="flex items-center justify-between w-full gap-2">
@@ -104,14 +100,29 @@ export function WorkspaceSwitcher() {
                   className="h-8 py-0 w-auto w-full group/workspace"
                 >
                   <div className="flex items-end gap-2 min-w-0 w-full">
-                    <div className="bg-primary flex aspect-square size-5 items-end justify-center rounded-sm">
-                      <span className="text-xs font-medium text-white">
-                        {workspace.name.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                    <span className="truncate text-sm text-foreground/90 font-medium">
-                      {workspace.name}
-                    </span>
+                    {workspace ? (
+                      <>
+                        <div className="bg-primary flex aspect-square size-5 items-end justify-center rounded-sm">
+                          <span className="text-xs font-medium text-white">
+                            {workspace.name.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <span className="truncate text-sm text-foreground/90 font-medium">
+                          {workspace.name}
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <div className="bg-muted/20 border border-border/30 flex aspect-square size-5 items-end justify-center rounded-sm">
+                          <span className="text-xs font-medium text-muted-foreground">
+                            ?
+                          </span>
+                        </div>
+                        <span className="truncate text-sm text-muted-foreground font-medium">
+                          Select workspace
+                        </span>
+                      </>
+                    )}
                   </div>
                   <ChevronDown
                     className="ml-1 size-3 text-muted-foreground/50 opacity-0 group-hover/workspace:opacity-100 data-[state=open]:opacity-100 data-[state=open]:rotate-180 transition-all duration-500 ease-out"
@@ -134,29 +145,37 @@ export function WorkspaceSwitcher() {
                 <Separator />
 
                 <div className="p-1">
-                  {workspaces?.map((ws: Workspace, index: number) => (
-                    <button
-                      type="button"
-                      key={ws.id}
-                      onClick={() => {
-                        handleWorkspaceChange(ws);
-                        setIsOpen(false);
-                      }}
-                      className="w-full flex items-center gap-2 px-2 py-1.5 hover:bg-secondary/80 focus:bg-secondary/80 rounded-sm transition-colors text-sm font-normal"
-                    >
-                      <div className="bg-muted/20 border border-border/30 flex size-5 items-center justify-center rounded-sm">
-                        <span className="text-xs font-medium text-muted-foreground">
-                          {ws.name.charAt(0).toUpperCase()}
+                  {workspaces && workspaces.length > 0 ? (
+                    workspaces.map((ws: Workspace, index: number) => (
+                      <button
+                        type="button"
+                        key={ws.id}
+                        onClick={() => {
+                          handleWorkspaceChange(ws);
+                          setIsOpen(false);
+                        }}
+                        className={`w-full flex items-center gap-2 px-2 py-1.5 hover:bg-secondary/80 focus:bg-secondary/80 rounded-sm transition-colors text-sm font-normal ${
+                          workspace?.id === ws.id ? "bg-secondary/50" : ""
+                        }`}
+                      >
+                        <div className="bg-muted/20 border border-border/30 flex size-5 items-center justify-center rounded-sm">
+                          <span className="text-xs font-medium text-muted-foreground">
+                            {ws.name.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <span className="text-foreground/90 flex-1 text-left">
+                          {ws.name}
                         </span>
-                      </div>
-                      <span className="text-foreground/90 flex-1 text-left">
-                        {ws.name}
-                      </span>
-                      <span className="text-xs text-muted-foreground/50">
-                        {getModifierKeyText()} {index > 8 ? "0" : index + 1}
-                      </span>
-                    </button>
-                  ))}
+                        <span className="text-xs text-muted-foreground/50">
+                          {getModifierKeyText()} {index > 8 ? "0" : index + 1}
+                        </span>
+                      </button>
+                    ))
+                  ) : (
+                    <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                      No workspaces available
+                    </div>
+                  )}
                 </div>
 
                 <Separator />

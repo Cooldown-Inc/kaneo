@@ -1,4 +1,5 @@
 import { and, desc, eq, gte } from "drizzle-orm";
+import { HTTPException } from "hono/http-exception";
 import db from "../../database";
 import {
   activityTable,
@@ -6,22 +7,43 @@ import {
   taskTable,
   userTable,
   workspaceTable,
+  workspaceUserTable,
 } from "../../database/schema";
 
 type FilterParams = {
   projectId?: string;
-  workspaceId?: string;
+  workspaceId: string;
   userId?: string;
   createdAfter?: string; // ISO datetime string
+  requestingUserId: string;
 };
 
-async function getActivitiesFiltered(params: FilterParams = {}) {
+async function getActivitiesFiltered(params: FilterParams) {
   const {
     projectId,
     workspaceId,
     userId,
     createdAfter,
+    requestingUserId,
   } = params;
+
+  // Validate that the requesting user has access to the workspace
+  const workspaceMember = await db
+    .select()
+    .from(workspaceUserTable)
+    .where(
+      and(
+        eq(workspaceUserTable.workspaceId, workspaceId),
+        eq(workspaceUserTable.userId, requestingUserId),
+      ),
+    )
+    .limit(1);
+
+  if (workspaceMember.length === 0) {
+    throw new HTTPException(403, {
+      message: "You do not have access to this workspace",
+    });
+  }
 
   // Build date filter
   let dateFilter: ReturnType<typeof gte> | undefined;
@@ -34,14 +56,11 @@ async function getActivitiesFiltered(params: FilterParams = {}) {
   }
 
   // Build where conditions
-  const conditions = [];
+  // Always filter by workspaceId to ensure we only return activities from the requested workspace
+  const conditions = [eq(projectTable.workspaceId, workspaceId)];
   
   if (projectId) {
     conditions.push(eq(taskTable.projectId, projectId));
-  }
-  
-  if (workspaceId) {
-    conditions.push(eq(projectTable.workspaceId, workspaceId));
   }
   
   if (userId) {
@@ -52,7 +71,7 @@ async function getActivitiesFiltered(params: FilterParams = {}) {
     conditions.push(dateFilter);
   }
 
-  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+  const whereClause = and(...conditions);
 
   const activities = await db
     .select({
