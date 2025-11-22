@@ -4,12 +4,12 @@ async function getAvailableMods(c: Context) {
   // Hard-coded mods for now
   const mods = [
     {
-      id: "calendar",
-      title: "Calendar 2",
+      id: "new-layout",
+      title: "New Layout",
     },
     {
-      id: "analytics",
-      title: "Analytics",
+      id: "personal-space",
+      title: "My Space",
     },
   ];
 
