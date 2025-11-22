@@ -4,11 +4,11 @@
 	"version": "0.0.0",
 	"type": "module",
 	"scripts": {
-		"dev": "npx wrangler dev",
+		"dev": "vite dev",
 		"build": "vite build",
-		"preview": "vite preview",
+		"preview": "pnpm build && vite preview",
 		"lint": "biome check --write .",
-		"deploy": "pnpm build && npx wrangler deploy"
+		"deploy": "pnpm build && wrangler deploy"
 	},
 	"dependencies": {
 		"@blocknote/core": "^0.37.0",
@@ -70,6 +70,7 @@
 		"zustand": "^5.0.4"
 	},
 	"devDependencies": {
+		"@cloudflare/vite-plugin": "^1.15.2",
 		"@tailwindcss/postcss": "^4.1.8",
 		"@types/node": "^24.1.0",
 		"@types/react": "^19.1.12",

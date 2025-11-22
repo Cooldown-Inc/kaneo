@@ -1,8 +1,11 @@
 {
   "name": "kaneo-web",
   "compatibility_date": "2025-11-16",
+  "main": "./worker.ts",
   "assets": {
-    "directory": "./dist"
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application"
   },
   "dev": {
     "port": 5173
