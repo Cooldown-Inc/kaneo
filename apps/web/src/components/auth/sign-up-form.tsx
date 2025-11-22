@@ -1,7 +1,7 @@
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import { useNavigate } from "@tanstack/react-router";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod/v4";
@@ -34,6 +34,7 @@ export function SignUpForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isPending, setIsPending] = useState(false);
   const navigate = useNavigate();
+  const isPendingRef = useRef(false);
   const form = useForm<SignUpFormValues>({
     resolver: standardSchemaResolver(signUpSchema),
     defaultValues: {
@@ -45,6 +46,7 @@ export function SignUpForm() {
 
   const onSubmit = async (data: SignUpFormValues) => {
     setIsPending(true);
+    isPendingRef.current = true;
     try {
       const result = await authClient.signUp.email({
         email: data.email,
@@ -55,6 +57,7 @@ export function SignUpForm() {
       if (result.error) {
         toast.error(result.error.message || "Failed to sign up");
         setIsPending(false);
+        isPendingRef.current = false;
         return;
       }
 
@@ -68,20 +71,27 @@ export function SignUpForm() {
 
       toast.success("Account created successfully");
       
-      // Navigate to create workspace page - keep loading until navigation completes
-      await navigate({
+      // Navigate to create workspace page - keep loading until route is ready
+      // Don't reset isPending - it stays true until component unmounts
+      navigate({
         to: "/dashboard/workspace/create",
         replace: true,
       });
+      // Note: isPending stays true - component will unmount when route is ready
+      // The route's beforeLoad hooks (auth check, etc.) will run, then component unmounts
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to sign up");
       setIsPending(false);
+      isPendingRef.current = false;
     }
   };
 
+  // Use ref value for display to persist across re-renders
+  const showLoading = isPending || isPendingRef.current;
+
   return (
     <div className="relative">
-      {isPending && (
+      {showLoading && (
         <div className="absolute inset-0 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm rounded-lg z-50 flex items-center justify-center">
           <div className="flex flex-col items-center gap-3">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -167,10 +177,10 @@ export function SignUpForm() {
 
         <Button
           type="submit"
-          disabled={isPending}
+          disabled={showLoading}
           className="w-full mt-4 text-white"
         >
-          {isPending ? "Creating Account..." : "Create Account"}
+          {showLoading ? "Creating Account..." : "Create Account"}
         </Button>
       </form>
     </Form>
