@@ -1,4 +1,0 @@
-# Cloudflare Pages SPA fallback
-# This ensures all routes are handled by the React app
-/* /index.html 200
-
