@@ -1,7 +1,7 @@
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import { useNavigate } from "@tanstack/react-router";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
-import { useRef, useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod/v4";
@@ -15,6 +15,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { WorkspaceLoadingModal } from "@/components/workspace-loading-modal";
 import { authClient } from "@/lib/auth-client";
 import { client } from "@/lib/client";
 
@@ -31,8 +32,8 @@ const signInSchema = z.object({
 export function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isPending, setIsPending] = useState(false);
+  const [showLoadingModal, setShowLoadingModal] = useState(false);
   const navigate = useNavigate();
-  const isPendingRef = useRef(false);
   const form = useForm<SignInFormValues>({
     resolver: standardSchemaResolver(signInSchema),
     defaultValues: {
@@ -41,9 +42,40 @@ export function SignInForm() {
     },
   });
 
+  // Monitor session and navigate when ready
+  useEffect(() => {
+    if (!showLoadingModal) return;
+
+    const checkSessionAndNavigate = async () => {
+      let attempts = 0;
+      const maxAttempts = 50; // Wait up to 5 seconds (50 * 100ms)
+      
+      while (attempts < maxAttempts) {
+        const { data: session } = await authClient.getSession();
+        if (session) {
+          // Session is available, navigate to dashboard
+          navigate({
+            to: "/dashboard",
+            replace: true,
+          });
+          // Modal will close when component unmounts
+          return;
+        }
+        attempts++;
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+      
+      // If we get here, session never became available
+      toast.error("Failed to establish session. Please try again.");
+      setShowLoadingModal(false);
+      setIsPending(false);
+    };
+
+    checkSessionAndNavigate();
+  }, [showLoadingModal, navigate]);
+
   const onSubmit = async (data: SignInFormValues) => {
     setIsPending(true);
-    isPendingRef.current = true;
     try {
       const result = await authClient.signIn.email({
         email: data.email,
@@ -53,50 +85,35 @@ export function SignInForm() {
       if (result.error) {
         toast.error(result.error.message || "Failed to sign in");
         setIsPending(false);
-        isPendingRef.current = false;
         return;
       }
 
       // Initialize Else extension if not already done (non-blocking)
       client.else.user.extension.initialize.$post().then(() => {
         console.log("✅ Else extension initialized for user");
-      }).catch((error) => {
+      }).catch((error: unknown) => {
         // Log error but don't block the sign-in flow
         console.error("Failed to initialize Else extension:", error);
       });
 
       toast.success("Signed in successfully");
       
-      // Navigate to dashboard - keep loading until route is ready
-      // Don't reset isPending - it stays true until component unmounts
-      navigate({
-        to: "/dashboard",
-        replace: true,
-      });
-      // Note: isPending stays true - component will unmount when route is ready
-      // The route's beforeLoad hooks (auth check, workspace fetch, etc.) will run, then component unmounts
+      // Show loading modal - it will handle waiting for session and navigation
+      setShowLoadingModal(true);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to sign in");
       setIsPending(false);
-      isPendingRef.current = false;
     }
   };
 
-  // Use ref value for display to persist across re-renders
-  const showLoading = isPending || isPendingRef.current;
-
   return (
-    <div className="relative">
-      {showLoading && (
-        <div className="absolute inset-0 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm rounded-lg z-50 flex items-center justify-center">
-          <div className="flex flex-col items-center gap-3">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-sm text-muted-foreground font-medium">
-              Signing you in...
-            </p>
-          </div>
-        </div>
-      )}
+    <>
+      <WorkspaceLoadingModal
+        isOpen={showLoadingModal}
+        title="Signing you in"
+        description="Please wait while we authenticate your session..."
+        statusText="Authenticating..."
+      />
       <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
         <div className="space-y-3">
@@ -154,14 +171,14 @@ export function SignInForm() {
 
         <Button
           type="submit"
-          disabled={showLoading}
+          disabled={isPending}
           size="sm"
           className="w-full mt-4 text-white"
         >
-          {showLoading ? "Signing In..." : "Sign In"}
+          {isPending ? "Signing In..." : "Sign In"}
         </Button>
       </form>
     </Form>
-    </div>
+    </>
   );
 }
