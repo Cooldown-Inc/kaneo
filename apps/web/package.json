@@ -7,7 +7,8 @@
 		"dev": "vite",
 		"build": "vite build",
 		"preview": "vite preview",
-		"lint": "biome check --write ."
+		"lint": "biome check --write .",
+		"deploy": "pnpm build && npx wrangler deploy"
 	},
 	"dependencies": {
 		"@blocknote/core": "^0.37.0",

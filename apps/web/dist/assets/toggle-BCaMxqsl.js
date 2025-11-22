@@ -1,0 +1,11 @@
+import{c as l}from"./createLucideIcon-CRcKb1Ol.js";import{c as i,j as o,k as d,L as m}from"./index-D6_JMR29.js";import{u as f}from"./useQuery-BDxn_D7I.js";/**
+ * @license lucide-react v0.545.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const p=[["path",{d:"M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49",key:"ct8e1f"}],["path",{d:"M14.084 14.158a3 3 0 0 1-4.242-4.242",key:"151rxh"}],["path",{d:"M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143",key:"13bj9a"}],["path",{d:"m2 2 20 20",key:"1ooewy"}]],k=l("eye-off",p);/**
+ * @license lucide-react v0.545.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const x=[["path",{d:"m16 11 2 2 4-4",key:"9rsbq5"}],["path",{d:"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2",key:"1yyitq"}],["circle",{cx:"9",cy:"7",r:"4",key:"nufk8"}]],j=l("user-check",x);function _(){const t=i.c(2);let e;t[0]===Symbol.for("react.memo_cache_sentinel")?(e=o.jsx("span",{className:"font-semibold",children:"Else"}),t[0]=e):e=t[0];let n;return t[1]===Symbol.for("react.memo_cache_sentinel")?(n=o.jsx("div",{className:"bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 rounded-lg p-3",children:o.jsxs("p",{className:"text-sm text-blue-900 dark:text-blue-100 leading-relaxed",children:["Kaneo is an open-source project management tool that we have integrated with ",e," as a starting point for prototyping.",o.jsx("br",{}),o.jsx("br",{}),"After creating an account you can explore examples and build your own."]})}),t[1]=n):n=t[1],n}function y(){const t=i.c(1);let e;return t[0]===Symbol.for("react.memo_cache_sentinel")?(e={queryKey:["config"],queryFn:d},t[0]=e):e=t[0],f(e)}function N(t){const e=i.c(6),{message:n,linkText:s,linkTo:c}=t,{data:u}=y();if(u?.disableRegistration)return null;let r;e[0]!==s||e[1]!==c?(r=o.jsx(m,{to:c,className:"underline underline-offset-4 hover:text-primary",children:s}),e[0]=s,e[1]=c,e[2]=r):r=e[2];let a;return e[3]!==n||e[4]!==r?(a=o.jsxs("div",{className:"text-center text-sm text-muted-foreground",children:[n," ",r]}),e[3]=n,e[4]=r,e[5]=a):a=e[5],a}export{N as A,k as E,j as U,_ as a,y as u};

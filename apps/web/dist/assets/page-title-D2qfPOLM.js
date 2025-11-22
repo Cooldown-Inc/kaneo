@@ -1,0 +1,1 @@
+import{c as a,r as p}from"./index-D6_JMR29.js";function u(l){const t=a.c(5),{title:e,suffix:n,hideAppName:f}=l,o=n===void 0?"Kaneo":n,i=f===void 0?!1:f;let s,c;return t[0]!==i||t[1]!==o||t[2]!==e?(s=()=>{const r=i?e:o?`${e} ⎯ ${o}`:e;document.title=r},c=[e,o,i],t[0]=i,t[1]=o,t[2]=e,t[3]=s,t[4]=c):(s=t[3],c=t[4]),p.useEffect(s,c),null}export{u as P};
