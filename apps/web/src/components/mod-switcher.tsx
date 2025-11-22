@@ -51,6 +51,13 @@ export function ModSwitcher() {
 
     const openWorkspace = async () => {
       try {
+        // Don't do anything Else-related when in Else dev environment
+        if (window.else?.inElseDevEnvironment()) {
+          console.log("🔧 In Else dev environment, skipping Else API calls");
+          setIsWorkspaceModalOpen(false);
+          return;
+        }
+
         console.log("🚀 Initializing user extension...");
         
         // Initialize extension (create tenant and extension if needed)

@@ -1,6 +1,6 @@
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
-import { useRouter } from "@tanstack/react-router";
-import { Eye, EyeOff } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -31,7 +31,7 @@ const signInSchema = z.object({
 export function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isPending, setIsPending] = useState(false);
-  const { history } = useRouter();
+  const navigate = useNavigate();
   const form = useForm<SignInFormValues>({
     resolver: standardSchemaResolver(signInSchema),
     defaultValues: {
@@ -50,6 +50,7 @@ export function SignInForm() {
 
       if (result.error) {
         toast.error(result.error.message || "Failed to sign in");
+        setIsPending(false);
         return;
       }
 
@@ -62,18 +63,31 @@ export function SignInForm() {
       });
 
       toast.success("Signed in successfully");
-      setTimeout(() => {
-        history.push("/dashboard");
-      }, 500);
+      
+      // Navigate to dashboard - keep loading until navigation completes
+      await navigate({
+        to: "/dashboard",
+        replace: true,
+      });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to sign in");
-    } finally {
       setIsPending(false);
     }
   };
 
   return (
-    <Form {...form}>
+    <div className="relative">
+      {isPending && (
+        <div className="absolute inset-0 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm rounded-lg z-50 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-3">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-sm text-muted-foreground font-medium">
+              Signing you in...
+            </p>
+          </div>
+        </div>
+      )}
+      <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
         <div className="space-y-3">
           <FormField
@@ -138,5 +152,6 @@ export function SignInForm() {
         </Button>
       </form>
     </Form>
+    </div>
   );
 }
