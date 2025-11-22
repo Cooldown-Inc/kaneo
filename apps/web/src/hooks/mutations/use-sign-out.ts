@@ -2,11 +2,28 @@ import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { authClient } from "@/lib/auth-client";
 
+declare global {
+  interface Window {
+    else?: {
+      clearCustomBundle: (reload?: boolean) => void;
+    };
+  }
+}
+
 function useSignOut() {
   const navigate = useNavigate();
 
   return useMutation({
     mutationFn: async () => {
+      // Clear Else bundle before signing out (don't reload, we'll navigate)
+      if (window.else?.clearCustomBundle) {
+        try {
+          window.else.clearCustomBundle(false);
+        } catch (error) {
+          // Silently handle errors - don't block logout
+        }
+      }
+
       const result = await authClient.signOut({
         fetchOptions: {
           onSuccess: () => {

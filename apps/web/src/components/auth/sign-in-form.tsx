@@ -1,7 +1,8 @@
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import { useNavigate } from "@tanstack/react-router";
-import { Eye, EyeOff } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
+import * as React from "react";
+import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod/v4";
@@ -15,7 +16,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { WorkspaceLoadingModal } from "@/components/workspace-loading-modal";
 import { authClient } from "@/lib/auth-client";
 import { client } from "@/lib/client";
 
@@ -29,11 +29,15 @@ const signInSchema = z.object({
   password: z.string(),
 });
 
+const PENDING_STORAGE_KEY = "sign-in-pending";
+const PENDING_TIMESTAMP_KEY = "sign-in-pending-timestamp";
+const PENDING_TIMEOUT_MS = 5000; // 5 seconds - if older than this, consider it stale
+
 export function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isPending, setIsPending] = useState(false);
-  const [showLoadingModal, setShowLoadingModal] = useState(false);
   const navigate = useNavigate();
+  const delayCompleteRef = useRef(false);
   const form = useForm<SignInFormValues>({
     resolver: standardSchemaResolver(signInSchema),
     defaultValues: {
@@ -42,39 +46,10 @@ export function SignInForm() {
     },
   });
 
-  // Monitor session and navigate when ready
-  useEffect(() => {
-    if (!showLoadingModal) return;
-
-    const checkSessionAndNavigate = async () => {
-      let attempts = 0;
-      const maxAttempts = 50; // Wait up to 5 seconds (50 * 100ms)
-      
-      while (attempts < maxAttempts) {
-        const { data: session } = await authClient.getSession();
-        if (session) {
-          // Session is available, navigate to dashboard
-          navigate({
-            to: "/dashboard",
-            replace: true,
-          });
-          // Modal will close when component unmounts
-          return;
-        }
-        attempts++;
-        await new Promise((resolve) => setTimeout(resolve, 100));
-      }
-      
-      // If we get here, session never became available
-      toast.error("Failed to establish session. Please try again.");
-      setShowLoadingModal(false);
-      setIsPending(false);
-    };
-
-    checkSessionAndNavigate();
-  }, [showLoadingModal, navigate]);
-
   const onSubmit = async (data: SignInFormValues) => {
+    const timestamp = Date.now().toString();
+    sessionStorage.setItem(PENDING_STORAGE_KEY, "true");
+    sessionStorage.setItem(PENDING_TIMESTAMP_KEY, timestamp);
     setIsPending(true);
     try {
       const result = await authClient.signIn.email({
@@ -84,37 +59,70 @@ export function SignInForm() {
 
       if (result.error) {
         toast.error(result.error.message || "Failed to sign in");
+        sessionStorage.removeItem(PENDING_STORAGE_KEY);
+        sessionStorage.removeItem(PENDING_TIMESTAMP_KEY);
         setIsPending(false);
         return;
       }
 
-      // Initialize Else extension if not already done (non-blocking)
-      client.else.user.extension.initialize.$post().then(() => {
-        console.log("✅ Else extension initialized for user");
-      }).catch((error: unknown) => {
+      // Initialize Else extension synchronously
+      try {
+        await client.else.user.extension.initialize.$post();
+      } catch (error) {
         // Log error but don't block the sign-in flow
-        console.error("Failed to initialize Else extension:", error);
-      });
+        // Error is silently handled to not interrupt sign-in flow
+      }
 
       toast.success("Signed in successfully");
-      
-      // Show loading modal - it will handle waiting for session and navigation
-      setShowLoadingModal(true);
+      delayCompleteRef.current = true;
+      // Navigate to dashboard - loading state will clear when component unmounts
+      navigate({
+        to: "/dashboard",
+        replace: true,
+      });
+      // It will be cleared when the component unmounts after navigation
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to sign in");
+      sessionStorage.removeItem(PENDING_STORAGE_KEY);
+      sessionStorage.removeItem(PENDING_TIMESTAMP_KEY);
       setIsPending(false);
     }
   };
 
+  // Check sessionStorage on mount - clear if stale (likely from page refresh)
+  React.useEffect(() => {
+    const stored = sessionStorage.getItem(PENDING_STORAGE_KEY);
+    const timestamp = sessionStorage.getItem(PENDING_TIMESTAMP_KEY);
+    
+    if (stored === "true" && timestamp) {
+      const age = Date.now() - parseInt(timestamp, 10);
+      // If older than timeout, it's likely from a page refresh, so clear it
+      if (age > PENDING_TIMEOUT_MS) {
+        sessionStorage.removeItem(PENDING_STORAGE_KEY);
+        sessionStorage.removeItem(PENDING_TIMESTAMP_KEY);
+      } else {
+        // Still fresh, restore pending state
+        setIsPending(true);
+      }
+    }
+  }, []);
+
+  // Use sessionStorage to persist pending state across remounts
+  const displayPending = sessionStorage.getItem(PENDING_STORAGE_KEY) === "true" || isPending;
+
+  // Clean up sessionStorage when component unmounts (after navigation)
+  React.useEffect(() => {
+    return () => {
+      // Only clear if we're navigating away (not on error)
+      if (delayCompleteRef.current) {
+        sessionStorage.removeItem(PENDING_STORAGE_KEY);
+        sessionStorage.removeItem(PENDING_TIMESTAMP_KEY);
+      }
+    };
+  }, []);
+
   return (
-    <>
-      <WorkspaceLoadingModal
-        isOpen={showLoadingModal}
-        title="Signing you in"
-        description="Please wait while we authenticate your session..."
-        statusText="Authenticating..."
-      />
-      <Form {...form}>
+    <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
         <div className="space-y-3">
           <FormField
@@ -128,6 +136,7 @@ export function SignInForm() {
                     placeholder="me@example.com"
                     type="email"
                     autoComplete="email"
+                    disabled={displayPending}
                     {...field}
                   />
                 </FormControl>
@@ -148,12 +157,14 @@ export function SignInForm() {
                       placeholder="••••••••"
                       type={showPassword ? "text" : "password"}
                       autoComplete="current-password"
+                      disabled={displayPending}
                       {...field}
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      disabled={displayPending}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
                       aria-label={
                         showPassword ? "Hide password" : "Show password"
                       }
@@ -171,14 +182,14 @@ export function SignInForm() {
 
         <Button
           type="submit"
-          disabled={isPending}
+          disabled={displayPending}
           size="sm"
           className="w-full mt-4 text-white"
         >
-          {isPending ? "Signing In..." : "Sign In"}
+          {displayPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {displayPending ? "Signing In..." : "Sign In"}
         </Button>
       </form>
     </Form>
-    </>
   );
 }
