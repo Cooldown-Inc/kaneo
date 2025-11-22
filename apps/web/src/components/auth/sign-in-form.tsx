@@ -19,6 +19,14 @@ import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
 import { client } from "@/lib/client";
 
+declare global {
+  interface Window {
+    else?: {
+      inElseDevEnvironment: () => boolean;
+    };
+  }
+}
+
 export type SignInFormValues = {
   email: string;
   password: string;
@@ -65,12 +73,13 @@ export function SignInForm() {
         return;
       }
 
-      // Initialize Else extension synchronously
-      try {
-        await client.else.user.extension.initialize.$post();
-      } catch (error) {
-        // Log error but don't block the sign-in flow
-        // Error is silently handled to not interrupt sign-in flow
+      // Initialize Else extension synchronously (skip in Else dev environment)
+      if (!window.else?.inElseDevEnvironment()) {
+        try {
+          await client.else.user.extension.initialize.$post();
+        } catch (error) {
+          // Silently handle errors - don't block the sign-in flow
+        }
       }
 
       toast.success("Signed in successfully");
