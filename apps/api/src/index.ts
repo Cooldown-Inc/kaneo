@@ -408,6 +408,51 @@ api.on(["POST", "GET", "PUT", "DELETE"], "/auth/*", (c) =>
   auth.handler(c.req.raw),
 );
 
+// Proxy all requests starting with /else-proxy/* to ELSE_API_BASE_URL/else-proxy/*
+api.all("/else-proxy/*", async (c) => {
+  const ELSE_API_BASE_URL =
+    process.env.ELSE_API_BASE_URL || "http://localhost:8001/vendor-api";
+  
+  // Get the path after /else-proxy
+  const path = c.req.path.replace("/else-proxy", "");
+  const targetUrl = `${ELSE_API_BASE_URL}/else-proxy${path}`;
+  
+  // Get query string if present
+  const queryString = c.req.url.split("?")[1];
+  const fullUrl = queryString ? `${targetUrl}?${queryString}` : targetUrl;
+  
+  // Clone headers, excluding host
+  const headers = new Headers();
+  c.req.raw.headers.forEach((value, key) => {
+    if (key.toLowerCase() !== "host") {
+      headers.set(key, value);
+    }
+  });
+  
+  // Get request body if present (use raw request to avoid consuming body)
+  let body: BodyInit | undefined;
+  if (c.req.method !== "GET" && c.req.method !== "HEAD") {
+    body = await c.req.raw.clone().arrayBuffer();
+  }
+  
+  // Forward the request to Else API
+  const response = await fetch(fullUrl, {
+    method: c.req.method,
+    headers,
+    body,
+  });
+  
+  // Clone the response
+  const responseBody = await response.arrayBuffer();
+  const responseHeaders = new Headers(response.headers);
+  
+  return new Response(responseBody, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: responseHeaders,
+  });
+});
+
 api.use("*", async (c, next) => {
   const session = await auth.api.getSession({ headers: c.req.raw.headers });
   c.set("user", session?.user || null);
