@@ -234,8 +234,8 @@ export function ModSwitcher() {
       console.log("🗑️ Clearing bundle and reloading to Original Site");
       try {
         if (window.else) {
-          // clearCustomBundle automatically reloads by default
-          window.else.clearCustomBundle();
+          // clearCustomBundle with reload=true to force page reload
+          window.else.clearCustomBundle(true);
         }
       } catch (error) {
         console.error("Failed to unload mod:", error);
@@ -317,6 +317,11 @@ export function ModSwitcher() {
       return "Original Site";
     }
     
+    // If we have a bundle URL but haven't fetched the mod bundle URLs yet, show loading
+    if (Object.keys(modBundleUrls).length === 0 && mods && mods.length > 0) {
+      return "Loading...";
+    }
+    
     // Find which mod matches the current bundle URL
     const matchingModId = Object.entries(modBundleUrls).find(
       ([, url]) => url === currentBundleUrl
@@ -324,10 +329,11 @@ export function ModSwitcher() {
     
     if (matchingModId) {
       const mod = mods?.find((m) => m.id === matchingModId);
-      return mod?.title || "Loaded Mod";
+      return mod?.title || "Unknown Mod";
     }
     
-    return "Loaded Mod";
+    // If we can't find a match, it might be a custom bundle
+    return "Custom Bundle";
   };
 
   // Track when dropdown is opened and store in localStorage
