@@ -36,6 +36,8 @@ declare global {
   }
 }
 
+const ELSE_DROPDOWN_OPENED_KEY = "else-dropdown-opened";
+
 export function ModSwitcher() {
   const { data: mods } = useGetAvailableMods();
   const [isOpen, setIsOpen] = React.useState(false);
@@ -44,6 +46,10 @@ export function ModSwitcher() {
   const [currentBundleUrl, setCurrentBundleUrl] = React.useState<string | null>(null);
   const [isWorkspaceModalOpen, setIsWorkspaceModalOpen] = React.useState(false);
   const [isInElseDevEnv, setIsInElseDevEnv] = React.useState(false);
+  const [hasOpenedDropdown, setHasOpenedDropdown] = React.useState(() => {
+    // Check if user has previously opened the dropdown
+    return localStorage.getItem(ELSE_DROPDOWN_OPENED_KEY) === "true";
+  });
 
   // Handle workspace modal open - initialize, start, and poll workspace
   React.useEffect(() => {
@@ -324,24 +330,38 @@ export function ModSwitcher() {
     return "Loaded Mod";
   };
 
+  // Track when dropdown is opened and store in localStorage
+  React.useEffect(() => {
+    if (isOpen && !hasOpenedDropdown) {
+      setHasOpenedDropdown(true);
+      localStorage.setItem(ELSE_DROPDOWN_OPENED_KEY, "true");
+    }
+  }, [isOpen, hasOpenedDropdown]);
+
   return (
-    <div className="flex items-center gap-2 w-full">
-      <SidebarMenu className="flex-1">
-        <SidebarMenuItem>
+    <div className="w-full">
+      <div className="px-2 mb-1">
+        <span className="text-xs font-medium text-muted-foreground/70 uppercase tracking-wide">
+          Else prototypes
+        </span>
+      </div>
+      <div className="flex items-center gap-2 w-full">
+        <SidebarMenu className="flex-1">
+          <SidebarMenuItem>
           <Popover open={isOpen} onOpenChange={setIsOpen}>
             <PopoverTrigger asChild>
               <SidebarMenuButton
                 size="sm"
-                className="h-8 py-0 w-auto w-full group/mod"
+                className="h-8 py-0 w-auto group/mod"
                 disabled={isLoading || !isSdkReady || isInElseDevEnv}
               >
-                <div className="flex items-center gap-2 min-w-0 w-full">
+                <div className="flex items-center gap-2">
                   <img 
                     src="/else-icon.png" 
                     alt="Else" 
                     className="size-5 rounded-sm"
                   />
-                  <span className="truncate text-sm text-foreground/90 font-medium">
+                  <span className="text-sm text-foreground/90 font-medium">
                     {isLoading 
                       ? "Loading..." 
                       : !isSdkReady 
@@ -350,11 +370,22 @@ export function ModSwitcher() {
                           ? "Disabled" 
                           : getSelectedModTitle()}
                   </span>
+                  <ChevronDown
+                    className="size-3 text-foreground/90 data-[state=open]:rotate-180 transition-all duration-500 ease-out"
+                    data-state={isOpen ? "open" : "closed"}
+                    strokeWidth={2.5}
+                  />
+                  {!hasOpenedDropdown && !isInElseDevEnv && (
+                    <svg
+                      className="w-7 h-7 text-white animate-bounce-horizontal ml-[13px]"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M10 6L2 12l8 6V6z" />
+                      <rect x="9" y="10" width="13" height="4" />
+                    </svg>
+                  )}
                 </div>
-                <ChevronDown
-                  className="ml-1 size-3 text-muted-foreground/50 opacity-0 group-hover/mod:opacity-100 data-[state=open]:opacity-100 data-[state=open]:rotate-180 transition-all duration-500 ease-out"
-                  data-state={isOpen ? "open" : "closed"}
-                />
               </SidebarMenuButton>
             </PopoverTrigger>
           <PopoverContent
@@ -433,7 +464,7 @@ export function ModSwitcher() {
         </Popover>
       </SidebarMenuItem>
     </SidebarMenu>
-    <div className="relative">
+    <div className="relative translate-y-0.5">
       <InfoPopover title="Toggle between prototypes" side="right" align="start">
         <p>
           These were built with Else. Once you have tried the examples select <b>Build your own</b> to try out the Else development environment.
@@ -443,15 +474,12 @@ export function ModSwitcher() {
       <TutorialPopover 
         tutorial="welcome" 
         step="intro"
-        title="This is the original Kaneo product"
-        side="right"
-        align="start"
-        showArrow={true}
-        arrowPosition="top-left"
-        className="-translate-y-2"
+        title="This is a sample app integrated with Else"
+        centerOnViewport={true}
+        showArrow={false}
       >
         <p>
-          You can toggle between the <b>Original Site</b> and prototypes built with <b>Else</b>. When you're ready, select <b>Build your own</b>.
+          Use the dropdown for examples of what you build with Else, and to try it yourself.
         </p>
       </TutorialPopover>
     </div>
@@ -460,7 +488,8 @@ export function ModSwitcher() {
       isOpen={isWorkspaceModalOpen}
       onOpenChange={setIsWorkspaceModalOpen}
     />
-  </div>
+      </div>
+    </div>
   );
 }
 

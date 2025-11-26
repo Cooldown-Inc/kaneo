@@ -1,5 +1,6 @@
 import * as React from "react";
 import * as PopoverPrimitive from "@radix-ui/react-popover";
+import { createPortal } from "react-dom";
 
 import { useTutorialStep } from "@/hooks/use-tutorial";
 import { cn } from "@/lib/cn";
@@ -16,6 +17,7 @@ interface TutorialPopoverProps {
   buttonText?: string;
   showArrow?: boolean;
   arrowPosition?: "top-left" | "top-right" | "bottom-left" | "bottom-right";
+  centerOnViewport?: boolean;
   onComplete?: () => void;
 }
 
@@ -30,6 +32,7 @@ export function TutorialPopover({
   buttonText = "Got it",
   showArrow = false,
   arrowPosition = "top-left",
+  centerOnViewport = false,
   onComplete,
 }: TutorialPopoverProps) {
   const { shouldShow, complete } = useTutorialStep(tutorial, step);
@@ -117,6 +120,43 @@ export function TutorialPopover({
         };
     }
   };
+
+  if (centerOnViewport) {
+    if (!shouldShow) return null;
+    
+    return createPortal(
+      <>
+        {/* Backdrop overlay */}
+        <div className="fixed inset-0 z-50 bg-black/60 animate-in fade-in-0 duration-200" />
+        {/* Modal container */}
+        <div className="fixed inset-0 z-[60] flex items-center justify-center">
+          <div
+            className={cn(
+              "w-80 rounded-md border bg-popover p-4 text-sm text-popover-foreground shadow-xl outline-none",
+              "animate-in fade-in-0 zoom-in-95 duration-200",
+              className
+            )}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {title && (
+              <div className="font-semibold text-sm mb-2 text-foreground">
+                {title}
+              </div>
+            )}
+            <div className="text-sm text-muted-foreground leading-relaxed mb-4">
+              {children}
+            </div>
+            <div className="flex justify-end">
+              <Button size="sm" onClick={handleComplete}>
+                {buttonText}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </>,
+      document.body
+    );
+  }
 
   return (
     <PopoverPrimitive.Root open={shouldShow}>
