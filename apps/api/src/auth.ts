@@ -46,6 +46,8 @@ function getTrustedOrigins(): string[] {
   return [
     "*", // Wildcard to allow all origins
     clientUrl,
+    "https://demo.somethingelse.ai",
+    "https://kaneo-api.somethingelse.ai",
     "http://localhost:5173",
     "http://localhost:5173/",
     "http://localhost:2021",
