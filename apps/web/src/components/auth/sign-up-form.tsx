@@ -1,8 +1,7 @@
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import { useNavigate } from "@tanstack/react-router";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
-import * as React from "react";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod/v4";
@@ -39,15 +38,10 @@ const signUpSchema = z.object({
   name: z.string(),
 });
 
-const SIGN_UP_PENDING_STORAGE_KEY = "sign-up-pending";
-const SIGN_UP_PENDING_TIMESTAMP_KEY = "sign-up-pending-timestamp";
-const PENDING_TIMEOUT_MS = 5000; // 5 seconds - if older than this, consider it stale
-
 export function SignUpForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isPending, setIsPending] = useState(false);
   const navigate = useNavigate();
-  const delayCompleteRef = useRef(false);
   const form = useForm<SignUpFormValues>({
     resolver: standardSchemaResolver(signUpSchema),
     defaultValues: {
@@ -58,9 +52,6 @@ export function SignUpForm() {
   });
 
   const onSubmit = async (data: SignUpFormValues) => {
-    const timestamp = Date.now().toString();
-    sessionStorage.setItem(SIGN_UP_PENDING_STORAGE_KEY, "true");
-    sessionStorage.setItem(SIGN_UP_PENDING_TIMESTAMP_KEY, timestamp);
     setIsPending(true);
     try {
       const result = await authClient.signUp.email({
@@ -71,8 +62,6 @@ export function SignUpForm() {
 
       if (result.error) {
         toast.error(result.error.message || "Failed to sign up");
-        sessionStorage.removeItem(SIGN_UP_PENDING_STORAGE_KEY);
-        sessionStorage.removeItem(SIGN_UP_PENDING_TIMESTAMP_KEY);
         setIsPending(false);
         return;
       }
@@ -87,52 +76,16 @@ export function SignUpForm() {
       }
 
       toast.success("Account created successfully");
-      delayCompleteRef.current = true;
-      // Navigate to workspace creation - loading state will clear when component unmounts
+      // Navigate to workspace creation - component will unmount, no need to clear isPending
       navigate({
         to: "/dashboard/workspace/create",
         replace: true,
       });
-      // Don't clear isPending or sessionStorage - let it stay visible during navigation
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to sign up");
-      sessionStorage.removeItem(SIGN_UP_PENDING_STORAGE_KEY);
-      sessionStorage.removeItem(SIGN_UP_PENDING_TIMESTAMP_KEY);
       setIsPending(false);
     }
   };
-
-  // Check sessionStorage on mount - clear if stale (likely from page refresh)
-  React.useEffect(() => {
-    const stored = sessionStorage.getItem(SIGN_UP_PENDING_STORAGE_KEY);
-    const timestamp = sessionStorage.getItem(SIGN_UP_PENDING_TIMESTAMP_KEY);
-    
-    if (stored === "true" && timestamp) {
-      const age = Date.now() - parseInt(timestamp, 10);
-      // If older than timeout, it's likely from a page refresh, so clear it
-      if (age > PENDING_TIMEOUT_MS) {
-        sessionStorage.removeItem(SIGN_UP_PENDING_STORAGE_KEY);
-        sessionStorage.removeItem(SIGN_UP_PENDING_TIMESTAMP_KEY);
-      } else {
-        // Still fresh, restore pending state
-        setIsPending(true);
-      }
-    }
-  }, []);
-
-  // Use sessionStorage to persist pending state across remounts
-  const displayPending = sessionStorage.getItem(SIGN_UP_PENDING_STORAGE_KEY) === "true" || isPending;
-
-  // Clean up sessionStorage when component unmounts (after navigation)
-  React.useEffect(() => {
-    return () => {
-      // Only clear if we're navigating away (not on error)
-      if (delayCompleteRef.current) {
-        sessionStorage.removeItem(SIGN_UP_PENDING_STORAGE_KEY);
-        sessionStorage.removeItem(SIGN_UP_PENDING_TIMESTAMP_KEY);
-      }
-    };
-  }, []);
 
   return (
     <Form {...form}>
@@ -149,7 +102,7 @@ export function SignUpForm() {
                     placeholder="John Doe"
                     type="text"
                     autoComplete="name"
-                    disabled={displayPending}
+                    disabled={isPending}
                     {...field}
                   />
                 </FormControl>
@@ -169,7 +122,7 @@ export function SignUpForm() {
                     placeholder="me@example.com"
                     type="email"
                     autoComplete="email"
-                    disabled={displayPending}
+                    disabled={isPending}
                     {...field}
                   />
                 </FormControl>
@@ -190,13 +143,13 @@ export function SignUpForm() {
                       placeholder="••••••••"
                       type={showPassword ? "text" : "password"}
                       autoComplete="new-password"
-                      disabled={displayPending}
+                      disabled={isPending}
                       {...field}
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      disabled={displayPending}
+                      disabled={isPending}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
                       aria-label={
                         showPassword ? "Hide password" : "Show password"
@@ -215,11 +168,11 @@ export function SignUpForm() {
 
         <Button
           type="submit"
-          disabled={displayPending}
+          disabled={isPending}
           className="w-full mt-4 text-white"
         >
-          {displayPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {displayPending ? "Creating Account..." : "Create Account"}
+          {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {isPending ? "Creating Account..." : "Create Account"}
         </Button>
       </form>
     </Form>
