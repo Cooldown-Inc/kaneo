@@ -1,14 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
+import * as ElseSDK from "@elsedev/react-csr-sdk";
 import { authClient } from "@/lib/auth-client";
-
-declare global {
-  interface Window {
-    else?: {
-      clearCustomBundle: (reload?: boolean) => void;
-    };
-  }
-}
 
 function useSignOut() {
   const navigate = useNavigate();
@@ -16,12 +9,10 @@ function useSignOut() {
   return useMutation({
     mutationFn: async () => {
       // Clear Else bundle before signing out (don't reload, we'll navigate)
-      if (window.else?.clearCustomBundle) {
-        try {
-          window.else.clearCustomBundle(false);
-        } catch (error) {
-          // Silently handle errors - don't block logout
-        }
+      try {
+        ElseSDK.clearCustomBundle(false);
+      } catch (error) {
+        // Silently handle errors - don't block logout
       }
 
       const result = await authClient.signOut({

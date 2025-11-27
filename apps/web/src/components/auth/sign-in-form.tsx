@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod/v4";
+import * as ElseSDK from "@elsedev/react-csr-sdk";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -17,14 +18,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
 import { client } from "@/lib/client";
-
-declare global {
-  interface Window {
-    else?: {
-      inElseDevEnvironment: () => boolean;
-    };
-  }
-}
 
 export type SignInFormValues = {
   email: string;
@@ -63,7 +56,7 @@ export function SignInForm() {
       }
 
       // Initialize Else extension synchronously (skip in Else dev environment)
-      if (!window.else?.inElseDevEnvironment()) {
+      if (!ElseSDK.inElseDevEnvironment()) {
         try {
           await client.else.user.extension.initialize.$post();
         } catch (error) {

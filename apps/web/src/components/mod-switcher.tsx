@@ -1,6 +1,7 @@
 import { ChevronDown, Hammer } from "lucide-react";
 import * as React from "react";
 import { toast } from "sonner";
+import * as ElseSDK from "@elsedev/react-csr-sdk";
 
 import { InfoPopover } from "@/components/ui/info-popover";
 import {
@@ -20,21 +21,6 @@ import getModBundle from "@/fetchers/mods/get-mod-bundle";
 import useGetAvailableMods from "@/hooks/queries/mods/use-get-available-mods";
 import { isTutorialCompleted, startTutorial } from "@/lib/tutorials";
 import { client } from "@/lib/client";
-
-// Declare the global Else SDK interface
-declare global {
-  interface Window {
-    else?: {
-      bundleLoaderVersion: string;
-      inElseDevEnvironment: () => boolean;
-      setCustomBundle: (bundleUrl: string | undefined, reload?: boolean) => void;
-      getCustomBundle: () => string | null;
-      clearCustomBundle: (reload?: boolean) => void;
-      reloadWithBundle: (bundleUrl?: string | undefined) => void;
-      setDebug: (debug: boolean) => void;
-    };
-  }
-}
 
 const ELSE_DROPDOWN_OPENED_KEY = "else-dropdown-opened";
 
@@ -58,7 +44,7 @@ export function ModSwitcher() {
     const openWorkspace = async () => {
       try {
         // Don't do anything Else-related when in Else dev environment
-        if (window.else?.inElseDevEnvironment()) {
+        if (ElseSDK.inElseDevEnvironment()) {
           console.log("🔧 In Else dev environment, skipping Else API calls");
           setIsWorkspaceModalOpen(false);
           return;
@@ -137,53 +123,22 @@ export function ModSwitcher() {
     openWorkspace();
   }, [isWorkspaceModalOpen]);
 
-  // Check if Else SDK is loaded
+  // Initialize Else SDK
   React.useEffect(() => {
-    // Debug: Log what's on the window object
-    console.log("🔍 Checking for Else SDK...");
-    console.log("window.else:", window.else);
+    console.log("🔍 Initializing Else SDK...");
     
-    const checkSdk = () => {
-      if (window.else && typeof window.else.setCustomBundle === 'function' && typeof window.else.reloadWithBundle === 'function') {
-        console.log("✅ Else SDK loaded successfully");
-        console.log("SDK Version:", window.else.bundleLoaderVersion);
-        
-        // Check if we're in an Else dev environment
-        const inDevEnv = window.else.inElseDevEnvironment();
-        console.log("🔧 In Else Dev Environment:", inDevEnv);
-        setIsInElseDevEnv(inDevEnv);
-        
-        setIsSdkReady(true);
-        return true;
-      }
+    try {
+      // Check if we're in an Else dev environment
+      const inDevEnv = ElseSDK.inElseDevEnvironment();
+      console.log("🔧 In Else Dev Environment:", inDevEnv);
+      setIsInElseDevEnv(inDevEnv);
       
-      return false;
-    };
-
-    // Check immediately
-    if (checkSdk()) return;
-
-    console.log("⏳ Waiting for Else SDK to load...");
-
-    // Poll for SDK availability
-    const interval = setInterval(() => {
-      if (checkSdk()) {
-        clearInterval(interval);
-      }
-    }, 100);
-
-    // Timeout after 10 seconds
-    const timeout = setTimeout(() => {
-      clearInterval(interval);
-      console.error("❌ Else SDK failed to load within 10 seconds");
-      console.log("Final check - window.else:", window.else);
+      setIsSdkReady(true);
+      console.log("✅ Else SDK initialized successfully");
+    } catch (error) {
+      console.error("❌ Failed to initialize Else SDK:", error);
       toast.error("Failed to initialize mod system. Please refresh the page.");
-    }, 10000);
-
-    return () => {
-      clearInterval(interval);
-      clearTimeout(timeout);
-    };
+    }
   }, []);
 
   // Auto-start welcome tutorial when component mounts
@@ -199,11 +154,11 @@ export function ModSwitcher() {
     if (!isSdkReady) return;
     
     // Don't fetch bundle in Else dev environment
-    if (window.else?.inElseDevEnvironment()) {
+    if (ElseSDK.inElseDevEnvironment()) {
       return;
     }
 
-    const bundleUrl = window.else?.getCustomBundle() || null;
+    const bundleUrl = ElseSDK.getCustomBundle() || null;
     setCurrentBundleUrl(bundleUrl);
     console.log("📦 Current bundle from Else SDK:", bundleUrl);
   }, [isSdkReady]);
@@ -218,7 +173,7 @@ export function ModSwitcher() {
     }
     
     // Don't do anything bundle-related in Else dev environment
-    if (window.else?.inElseDevEnvironment()) {
+    if (ElseSDK.inElseDevEnvironment()) {
       console.log("🔧 In Else dev environment, mod loading disabled");
       toast.error("Mod loading is disabled in Else dev environment");
       return;
@@ -233,10 +188,8 @@ export function ModSwitcher() {
       
       console.log("🗑️ Clearing bundle and reloading to Original Site");
       try {
-        if (window.else) {
-          // clearCustomBundle with reload=true to force page reload
-          window.else.clearCustomBundle(true);
-        }
+        // clearCustomBundle with reload=true to force page reload
+        ElseSDK.clearCustomBundle(true);
       } catch (error) {
         console.error("Failed to unload mod:", error);
         toast.error("Failed to switch to Original Site");
@@ -262,12 +215,8 @@ export function ModSwitcher() {
       }
 
       // Load the extension using the Else SDK
-      if (window.else) {
-        // reloadWithBundle sets the bundle AND reloads in one call
-        window.else.reloadWithBundle(response.bundleUrl);
-      } else {
-        throw new Error("Else SDK not loaded");
-      }
+      // reloadWithBundle sets the bundle AND reloads in one call
+      ElseSDK.reloadWithBundle(response.bundleUrl);
     } catch (error) {
       console.error("Failed to load mod:", error);
       toast.error(
@@ -287,7 +236,7 @@ export function ModSwitcher() {
     if (!isSdkReady) return;
     
     // Don't fetch bundles in Else dev environment
-    if (window.else?.inElseDevEnvironment()) {
+    if (ElseSDK.inElseDevEnvironment()) {
       return;
     }
 
