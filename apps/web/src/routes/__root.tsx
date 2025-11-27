@@ -3,12 +3,14 @@ import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
 import { Toaster } from "sonner";
 import { useUserPreferencesStore } from "@/store/user-preferences";
 import type { User } from "@/types/user";
+import { NotFound } from "@/components/not-found";
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient;
   user: User | null | undefined;
 }>()({
   component: RootComponent,
+  notFoundComponent: NotFound,
 });
 
 function RootComponent() {
