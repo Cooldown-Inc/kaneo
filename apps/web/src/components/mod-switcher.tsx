@@ -188,8 +188,9 @@ export function ModSwitcher() {
       
       console.log("🗑️ Clearing bundle and reloading to Original Site");
       try {
-        // clearCustomBundle with reload=true to force page reload
-        ElseSDK.clearCustomBundle(true);
+        // reloadWithBundle with undefined clears the bundle and reloads
+        ElseSDK.reloadWithBundle(undefined);
+        window.location.reload();
       } catch (error) {
         console.error("Failed to unload mod:", error);
         toast.error("Failed to switch to Original Site");
@@ -217,6 +218,7 @@ export function ModSwitcher() {
       // Load the extension using the Else SDK
       // reloadWithBundle sets the bundle AND reloads in one call
       ElseSDK.reloadWithBundle(response.bundleUrl);
+      window.location.reload();
     } catch (error) {
       console.error("Failed to load mod:", error);
       toast.error(
