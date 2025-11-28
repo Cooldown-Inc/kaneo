@@ -436,7 +436,7 @@ export function ModSwitcher() {
         showArrow={false}
       >
         <p>
-          Use the dropdown for examples of what you build with Else, and to try it yourself.
+          Use the dropdown for examples of what you can build with Else, and to try it yourself.
         </p>
       </TutorialPopover>
     </div>
