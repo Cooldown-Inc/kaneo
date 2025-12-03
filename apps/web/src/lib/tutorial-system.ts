@@ -12,6 +12,11 @@ export interface Tutorial {
   steps: string[];
 }
 
+export interface TutorialStepContent {
+  title: string;
+  content: string;
+}
+
 interface TutorialState {
   activeTutorial: string | null;
   currentStepIndex: number;
@@ -20,6 +25,9 @@ interface TutorialState {
 
 // In-memory tutorial definitions
 const tutorials = new Map<string, Tutorial>();
+
+// In-memory tutorial content (title and body for each step)
+const tutorialContent = new Map<string, TutorialStepContent>();
 
 // Get current state from localStorage
 function getState(): TutorialState {
@@ -53,6 +61,29 @@ function setState(state: TutorialState): void {
  */
 export function defineTutorial(name: string, steps: string[]): void {
   tutorials.set(name, { name, steps });
+}
+
+/**
+ * Define content for a tutorial step
+ */
+export function defineTutorialStepContent(
+  tutorialName: string,
+  stepName: string,
+  content: TutorialStepContent
+): void {
+  const key = `${tutorialName}:${stepName}`;
+  tutorialContent.set(key, content);
+}
+
+/**
+ * Get content for a tutorial step
+ */
+export function getTutorialStepContent(
+  tutorialName: string,
+  stepName: string
+): TutorialStepContent | undefined {
+  const key = `${tutorialName}:${stepName}`;
+  return tutorialContent.get(key);
 }
 
 /**

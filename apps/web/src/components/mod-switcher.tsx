@@ -432,14 +432,9 @@ export function ModSwitcher() {
       <TutorialPopover 
         tutorial="welcome" 
         step="intro"
-        title="This is a sample app integrated with Else"
         centerOnViewport={true}
         showArrow={false}
-      >
-        <p>
-          Use the dropdown for examples of what you can build with Else, and to try it yourself.
-        </p>
-      </TutorialPopover>
+      />
     </div>
 
     <WorkspaceLoadingModal

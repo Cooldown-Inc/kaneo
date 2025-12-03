@@ -4,12 +4,13 @@ import { createPortal } from "react-dom";
 
 import { useTutorialStep } from "@/hooks/use-tutorial";
 import { cn } from "@/lib/cn";
+import { getTutorialStepContent } from "@/lib/tutorials";
 import { Button } from "./button";
 
 interface TutorialPopoverProps {
   tutorial: string;
   step: string;
-  children: React.ReactNode;
+  children?: React.ReactNode;
   title?: string;
   side?: "top" | "right" | "bottom" | "left";
   align?: "start" | "center" | "end";
@@ -37,12 +38,22 @@ export function TutorialPopover({
 }: TutorialPopoverProps) {
   const { shouldShow, complete } = useTutorialStep(tutorial, step);
 
+  // Get content from centralized definitions if not provided as props
+  const stepContent = getTutorialStepContent(tutorial, step);
+  const displayTitle = title ?? stepContent?.title;
+  const displayContent = children ?? (stepContent ? <p>{stepContent.content}</p> : null);
+
   const handleComplete = () => {
     complete();
     onComplete?.();
   };
 
   if (!shouldShow) {
+    return null;
+  }
+
+  if (!displayContent) {
+    console.warn(`No content provided for tutorial step ${tutorial}:${step}`);
     return null;
   }
 
@@ -138,13 +149,13 @@ export function TutorialPopover({
             )}
             onClick={(e) => e.stopPropagation()}
           >
-            {title && (
+            {displayTitle && (
               <div className="font-semibold text-sm mb-2 text-foreground">
-                {title}
+                {displayTitle}
               </div>
             )}
             <div className="text-sm text-muted-foreground leading-relaxed mb-4">
-              {children}
+              {displayContent}
             </div>
             <div className="flex justify-end">
               <Button size="sm" onClick={handleComplete}>
@@ -184,13 +195,13 @@ export function TutorialPopover({
               <div className={getArrowStyles().fill} />
             </div>
           )}
-          {title && (
+          {displayTitle && (
             <div className="font-semibold text-sm mb-2 text-foreground">
-              {title}
+              {displayTitle}
             </div>
           )}
           <div className="text-sm text-muted-foreground leading-relaxed mb-4">
-            {children}
+            {displayContent}
           </div>
           <div className="flex justify-end">
             <Button size="sm" onClick={handleComplete}>

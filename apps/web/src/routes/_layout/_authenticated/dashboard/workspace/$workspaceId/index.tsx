@@ -16,6 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { TutorialPopover } from "@/components/ui/tutorial-popover";
 import icons from "@/constants/project-icons";
 import { shortcuts } from "@/constants/shortcuts";
 import useGetProjects from "@/hooks/queries/project/use-get-projects";
@@ -112,6 +113,13 @@ function RouteComponent() {
             </TableBody>
           </Table>
         </WorkspaceLayout>
+
+        <TutorialPopover
+          tutorial="else-welcome"
+          step="vibe-coding"
+          centerOnViewport={true}
+          showArrow={false}
+        />
       </>
     );
   }
@@ -159,6 +167,13 @@ function RouteComponent() {
         <CreateProjectModal
           open={isCreateProjectOpen}
           onClose={() => setIsCreateProjectOpen(false)}
+        />
+
+        <TutorialPopover
+          tutorial="else-welcome"
+          step="vibe-coding"
+          centerOnViewport={true}
+          showArrow={false}
         />
       </>
     );
@@ -270,6 +285,13 @@ function RouteComponent() {
       <CreateProjectModal
         open={isCreateProjectOpen}
         onClose={() => setIsCreateProjectOpen(false)}
+      />
+
+      <TutorialPopover
+        tutorial="else-welcome"
+        step="vibe-coding"
+        centerOnViewport={true}
+        showArrow={false}
       />
     </>
   );

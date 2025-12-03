@@ -1,7 +1,7 @@
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import { useNavigate } from "@tanstack/react-router";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod/v4";
@@ -16,8 +16,10 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { TutorialPopover } from "@/components/ui/tutorial-popover";
 import { authClient } from "@/lib/auth-client";
 import { client } from "@/lib/client";
+import { isTutorialCompleted, startTutorial } from "@/lib/tutorials";
 
 export type SignUpFormValues = {
   email: string;
@@ -43,6 +45,14 @@ export function SignUpForm() {
       name: "",
     },
   });
+
+  // Auto-start Else welcome tutorial when in Else dev environment
+  useEffect(() => {
+    if (ElseSDK.inElseDevEnvironment() && !isTutorialCompleted("else-welcome")) {
+      startTutorial("else-welcome");
+      window.dispatchEvent(new CustomEvent("tutorial-state-changed"));
+    }
+  }, []);
 
   const onSubmit = async (data: SignUpFormValues) => {
     setIsPending(true);
@@ -81,93 +91,102 @@ export function SignUpForm() {
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
-        <div className="space-y-3">
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field, fieldState }) => (
-              <FormItem>
-                <FormLabel className="text-sm font-medium">Full Name</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="John Doe"
-                    type="text"
-                    autoComplete="name"
-                    disabled={isPending}
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage>{fieldState.error?.message}</FormMessage>
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field, fieldState }) => (
-              <FormItem>
-                <FormLabel className="text-sm font-medium">Email</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="me@example.com"
-                    type="email"
-                    autoComplete="email"
-                    disabled={isPending}
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage>{fieldState.error?.message}</FormMessage>
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field, fieldState }) => (
-              <FormItem>
-                <FormLabel className="text-sm font-medium">Password</FormLabel>
-                <FormControl>
-                  <div className="relative">
+    <div className="relative">
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+          <div className="space-y-3">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field, fieldState }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-medium">Full Name</FormLabel>
+                  <FormControl>
                     <Input
-                      placeholder="••••••••"
-                      type={showPassword ? "text" : "password"}
-                      autoComplete="new-password"
+                      placeholder="John Doe"
+                      type="text"
+                      autoComplete="name"
                       disabled={isPending}
                       {...field}
                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      disabled={isPending}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
-                      aria-label={
-                        showPassword ? "Hide password" : "Show password"
-                      }
-                      aria-pressed={showPassword}
-                    >
-                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
-                  </div>
-                </FormControl>
-                <FormMessage>{fieldState.error?.message}</FormMessage>
-              </FormItem>
-            )}
-          />
-        </div>
+                  </FormControl>
+                  <FormMessage>{fieldState.error?.message}</FormMessage>
+                </FormItem>
+              )}
+            />
 
-        <Button
-          type="submit"
-          disabled={isPending}
-          className="w-full mt-4 text-white"
-        >
-          {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {isPending ? "Creating Account..." : "Create Account"}
-        </Button>
-      </form>
-    </Form>
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field, fieldState }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-medium">Email</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="me@example.com"
+                      type="email"
+                      autoComplete="email"
+                      disabled={isPending}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage>{fieldState.error?.message}</FormMessage>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field, fieldState }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-medium">Password</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Input
+                        placeholder="••••••••"
+                        type={showPassword ? "text" : "password"}
+                        autoComplete="new-password"
+                        disabled={isPending}
+                        {...field}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        disabled={isPending}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
+                        aria-label={
+                          showPassword ? "Hide password" : "Show password"
+                        }
+                        aria-pressed={showPassword}
+                      >
+                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                  </FormControl>
+                  <FormMessage>{fieldState.error?.message}</FormMessage>
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <Button
+            type="submit"
+            disabled={isPending}
+            className="w-full mt-4 text-white"
+          >
+            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isPending ? "Creating Account..." : "Create Account"}
+          </Button>
+        </form>
+      </Form>
+
+      <TutorialPopover
+        tutorial="else-welcome"
+        step="intro"
+        centerOnViewport={true}
+        showArrow={false}
+      />
+    </div>
   );
 }
