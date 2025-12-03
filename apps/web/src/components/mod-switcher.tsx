@@ -186,11 +186,12 @@ export function ModSwitcher() {
         return;
       }
       
-      console.log("🗑️ Clearing bundle and reloading to Original Site");
+      console.log("🗑️ Clearing bundle and navigating to dashboard");
       try {
-        // reloadWithBundle with undefined clears the bundle and reloads
-        ElseSDK.reloadWithBundle(undefined);
-        window.location.reload();
+        // Clear the bundle without reloading
+        ElseSDK.clearCustomBundle(false);
+        // Navigate to root dashboard with full page reload
+        window.location.href = "/dashboard";
       } catch (error) {
         console.error("Failed to unload mod:", error);
         toast.error("Failed to switch to Original Site");
@@ -215,10 +216,11 @@ export function ModSwitcher() {
         throw new Error("No bundle URL returned");
       }
 
-      // Load the extension using the Else SDK
-      // reloadWithBundle sets the bundle AND reloads in one call
-      ElseSDK.reloadWithBundle(response.bundleUrl);
-      window.location.reload();
+      // Set the custom bundle without reloading
+      ElseSDK.setCustomBundle(response.bundleUrl, false);
+      
+      // Navigate to root dashboard with full page reload
+      window.location.href = "/dashboard";
     } catch (error) {
       console.error("Failed to load mod:", error);
       toast.error(
@@ -226,7 +228,6 @@ export function ModSwitcher() {
       );
       setIsLoading(false);
     }
-    // Note: isLoading will be reset after page reload, no finally needed
   };
 
   // Store bundle URLs for each mod to match against current bundle
