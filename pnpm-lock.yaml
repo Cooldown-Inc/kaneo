@@ -222,8 +222,8 @@ importers:
         specifier: ^3.2.2
         version: 3.2.2(react@19.2.0)
       '@elsedev/react-csr-sdk':
-        specifier: ^1.0.20
-        version: 1.0.20
+        specifier: ^1.0.21
+        version: 1.0.21
       '@hookform/resolvers':
         specifier: ^5.1.1
         version: 5.2.2(react-hook-form@7.66.0(react@19.2.0))
@@ -1007,8 +1007,8 @@ packages:
   '@drizzle-team/brocli@0.10.2':
     resolution: {integrity: sha512-z33Il7l5dKjUgGULTqBsQBQwckHh5AbIuxhdsIxDDiZAzBOrZO6q9ogcWC65kU382AfynTfgNumVcNIjuIua6w==}
 
-  '@elsedev/react-csr-sdk@1.0.20':
-    resolution: {integrity: sha512-K2NL3TQ9oXKWwdiFd0l9XriQghFtaqNFYZA7sm26UQrd9rnmiVKuULRjl+E60HnnEXcgkI/2JHT0eGyxTbklzw==}
+  '@elsedev/react-csr-sdk@1.0.21':
+    resolution: {integrity: sha512-zPDesVxe6IjcX9lsKz/GjXsKQ5Bg+BTImkH8PVYWoQVBvEIhybGH2sHIlS0KDSXejzchui2C3dDj80lwr4W5Sg==}
     hasBin: true
 
   '@emnapi/runtime@1.7.0':
@@ -8480,7 +8480,7 @@ snapshots:
 
   '@drizzle-team/brocli@0.10.2': {}
 
-  '@elsedev/react-csr-sdk@1.0.20': {}
+  '@elsedev/react-csr-sdk@1.0.21': {}
 
   '@emnapi/runtime@1.7.0':
     dependencies:
