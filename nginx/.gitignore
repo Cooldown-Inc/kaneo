@@ -1,0 +1,10 @@
+# Environment variables
+.env
+
+# Logs
+logs/
+*.log
+
+# Generated configs (if using template)
+# nginx.conf
+

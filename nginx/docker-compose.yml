@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: kaneo-nginx-proxy
+    ports:
+      - "${PROXY_PORT:-5174}:${PROXY_PORT:-5174}"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    environment:
+      - ELSE_API_HOST=${ELSE_API_HOST:-host.docker.internal}
+      - ELSE_API_PORT=${ELSE_API_PORT:-8001}
+      - FRONTEND_HOST=${FRONTEND_HOST:-host.docker.internal}
+      - FRONTEND_PORT=${FRONTEND_PORT:-5173}
+      - PROXY_PORT=${PROXY_PORT:-8080}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    networks:
+      - kaneo-network
+
+networks:
+  kaneo-network:
+    driver: bridge
+
