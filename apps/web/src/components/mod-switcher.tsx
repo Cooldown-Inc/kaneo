@@ -414,7 +414,9 @@ export function ModSwitcher() {
                   <Hammer className="size-3 text-blue-600" />
                 </div>
                 <span className="text-foreground/90 flex-1 text-left">
-                  Build your own
+                  {mods?.some((mod) => mod.title === "Your Prototype") 
+                    ? "Edit prototype" 
+                    : "Build your own"}
                 </span>
               </button>
             </div>

@@ -44,6 +44,7 @@ export interface ExtensionInfo {
   updated_at?: string | null;
   is_running: boolean;
   dev_env_url?: string | null;
+  is_published?: boolean;
 }
 
 export interface ListExtensionsResponse {
@@ -282,5 +283,32 @@ export async function listExtensions(
   }
 
   return await response.json();
+}
+
+/**
+ * List published extensions for a tenant
+ */
+export async function listPublishedExtensions(
+  tenantExternalId: string,
+): Promise<ExtensionInfo[]> {
+  try {
+    console.log("[Else API] Fetching published extensions for tenant:", tenantExternalId);
+    
+    // Use the existing listExtensions endpoint
+    const response = await listExtensions(tenantExternalId);
+    
+    // Filter for only published extensions
+    const publishedExtensions = (response.extensions || []).filter(
+      (ext) => ext.is_published === true
+    );
+    
+    console.log("[Else API] Published extensions:", publishedExtensions);
+    
+    return publishedExtensions;
+  } catch (error) {
+    console.error("[Else API] Error fetching published extensions:", error);
+    // Return empty array on error to fail gracefully
+    return [];
+  }
 }
 

@@ -85,6 +85,8 @@ export const workspaceTable = pgTable("workspace", {
   metadata: text("metadata"),
   description: text("description"),
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+  elseTenantId: text("else_tenant_id"),
+  elseExtensionId: text("else_extension_id"),
 });
 
 export const workspaceUserTable = pgTable(
