@@ -88,6 +88,7 @@ export function getTutorialStepContent(
 
 /**
  * Start a tutorial (activates it and resets to first step)
+ * If the tutorial is already active, this does nothing (preserves progress)
  */
 export function startTutorial(name: string): void {
   const tutorial = tutorials.get(name);
@@ -101,6 +102,12 @@ export function startTutorial(name: string): void {
   // Check if already completed
   if (state.completedTutorials.includes(name)) {
     console.log(`Tutorial "${name}" already completed`);
+    return;
+  }
+
+  // Check if already active - don't reset progress
+  if (state.activeTutorial === name) {
+    console.log(`Tutorial "${name}" is already active`);
     return;
   }
 
