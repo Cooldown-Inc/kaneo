@@ -25,6 +25,7 @@ defineTutorialStepContent("welcome", "intro", {
 defineTutorial("else-welcome", [
   "intro",
   "vibe-coding",
+  "publishing",
 ]);
 
 defineTutorialStepContent("else-welcome", "intro", {
@@ -35,6 +36,11 @@ defineTutorialStepContent("else-welcome", "intro", {
 defineTutorialStepContent("else-welcome", "vibe-coding", {
   title: "Vibe coding with Else",
   content: "Start with asking Else to do something simple, like changing styling. Then you can move on to adding a whole new feature.",
+});
+
+defineTutorialStepContent("else-welcome", "publishing", {
+  title: "Publishing",
+  content: "When you're happy with your prototype, publish it and it will show in the prototype drop-down.",
 });
 
 // Add more tutorials as needed

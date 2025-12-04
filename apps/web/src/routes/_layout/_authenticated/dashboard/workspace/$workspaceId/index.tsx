@@ -120,6 +120,18 @@ function RouteComponent() {
           centerOnViewport={true}
           showArrow={false}
         />
+
+        {/* Publishing step - points to top right corner */}
+        <div className="fixed top-4 right-8 pointer-events-none">
+          <TutorialPopover
+            tutorial="else-welcome"
+            step="publishing"
+            side="left"
+            align="start"
+            showArrow={true}
+            arrowPosition="top-right"
+          />
+        </div>
       </>
     );
   }
@@ -175,6 +187,18 @@ function RouteComponent() {
           centerOnViewport={true}
           showArrow={false}
         />
+
+        {/* Publishing step - points to top right corner */}
+        <div className="fixed top-4 right-8 pointer-events-none">
+          <TutorialPopover
+            tutorial="else-welcome"
+            step="publishing"
+            side="left"
+            align="start"
+            showArrow={true}
+            arrowPosition="top-right"
+          />
+        </div>
       </>
     );
   }
@@ -293,6 +317,18 @@ function RouteComponent() {
         centerOnViewport={true}
         showArrow={false}
       />
+
+      {/* Publishing step - points to top right corner */}
+      <div className="fixed top-4 right-8 pointer-events-none">
+        <TutorialPopover
+          tutorial="else-welcome"
+          step="publishing"
+          side="left"
+          align="start"
+          showArrow={true}
+          arrowPosition="top-right"
+        />
+      </div>
     </>
   );
 }
